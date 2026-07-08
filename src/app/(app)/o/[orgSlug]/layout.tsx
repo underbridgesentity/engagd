@@ -2,6 +2,7 @@ import Link from "next/link";
 import { auth } from "@/auth";
 import { requireOrg } from "@/lib/tenancy";
 import { Badge } from "@/components/ui";
+import { Logo } from "@/components/logo";
 import { signOutAction } from "./actions";
 
 const NAV = [
@@ -29,8 +30,13 @@ export default async function OrgLayout({
     <div className="flex min-h-screen flex-col bg-ink md:flex-row">
       <aside className="flex w-full shrink-0 flex-col border-b border-line bg-ink-2 md:min-h-screen md:w-60 md:border-b-0 md:border-r">
         <div className="flex items-center justify-between px-5 py-5">
-          <Link href={`/o/${orgSlug}`} className="font-display text-lg text-fg">
-            engagd<span className="text-signal">.</span>
+          <Link
+            href={`/o/${orgSlug}`}
+            className="flex items-baseline gap-0.5 text-fg"
+            aria-label="Engagd dashboard"
+          >
+            <Logo className="h-5 w-auto" />
+            <span className="font-display text-lg leading-none text-signal">.</span>
           </Link>
           <Badge tone={ctx.role === "owner" ? "signal" : "neutral"}>
             {ctx.role}

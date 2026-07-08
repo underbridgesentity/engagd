@@ -1,5 +1,6 @@
 import * as React from "react";
 import type { EventRow } from "@/lib/rsvp";
+import { Logo } from "@/components/logo";
 
 // Shared building blocks for the public attendee surfaces (/e, /r, /join).
 // Server components only; no client JS in this file.
@@ -29,10 +30,9 @@ export function MicrositeShell({
       <div className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col px-4 pb-10 sm:px-6">
         <main className="flex-1">{children}</main>
         {config.hideEngagdBranding ? null : (
-          <footer className="mt-12 border-t border-line pt-4 text-center">
-            <span className="font-data text-xs text-fg-faint">
-              Powered by Engagd
-            </span>
+          <footer className="mt-12 flex items-center justify-center gap-1.5 border-t border-line pt-4">
+            <span className="font-data text-xs text-fg-faint">Powered by</span>
+            <Logo className="h-3 w-auto text-fg-faint" />
           </footer>
         )}
       </div>

@@ -7,6 +7,7 @@ import { memberships, organisations, orgInvites } from "@/db/schema";
 import { canAddSeat } from "@/lib/entitlements";
 import { audit } from "@/lib/audit";
 import { Button } from "@/components/ui";
+import { Wordmark } from "@/components/logo";
 
 // Partially mask an email address for display to a signed-in visitor whose
 // session email does not match the invite: j***@domain.com.
@@ -20,9 +21,9 @@ function Shell({ children }: { children: React.ReactNode }) {
   return (
     <main className="flex min-h-screen items-center justify-center bg-ink px-6">
       <div className="w-full max-w-md">
-        <p className="mb-6 text-center font-display text-xl tracking-tight text-fg">
-          engagd<span className="text-signal">.</span>
-        </p>
+        <div className="mb-6 flex justify-center">
+          <Wordmark className="text-xl" />
+        </div>
         <div className="rounded-[10px] border border-line bg-raised p-8">
           {children}
         </div>

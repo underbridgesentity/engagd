@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { Button, Input, Label } from "@/components/ui";
+import { Logo } from "@/components/logo";
 import { signInWithEmail, signInWithGoogle } from "./actions";
 
 const ERROR_COPY: Record<string, string> = {
@@ -23,8 +24,13 @@ export default async function LoginPage({
   return (
     <main className="flex min-h-screen items-center justify-center bg-ink px-6">
       <div className="w-full max-w-sm">
-        <Link href="/" className="font-display text-xl text-fg">
-          engagd<span className="text-signal">.</span>
+        <Link
+          href="/"
+          className="flex items-baseline gap-0.5 text-fg"
+          aria-label="Engagd home"
+        >
+          <Logo className="h-6 w-auto" />
+          <span className="font-display text-xl leading-none text-signal">.</span>
         </Link>
         <h1 className="mt-8 font-display text-2xl text-fg">Sign in</h1>
         <p className="mt-2 text-sm text-fg-dim">

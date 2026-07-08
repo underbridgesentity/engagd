@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { currentUserOrgs } from "@/lib/tenancy";
 import { Button, Input, Label } from "@/components/ui";
+import { Wordmark } from "@/components/logo";
 import { createOrganisation } from "./actions";
 
 const ERROR_COPY: Record<string, string> = {
@@ -23,9 +24,7 @@ export default async function OnboardingPage({
   return (
     <main className="flex min-h-screen items-center justify-center bg-ink px-6">
       <div className="w-full max-w-md">
-        <span className="font-display text-xl text-fg">
-          engagd<span className="text-signal">.</span>
-        </span>
+        <Wordmark className="text-xl" />
         <h1 className="mt-8 font-display text-3xl text-fg">
           Name your organisation
         </h1>

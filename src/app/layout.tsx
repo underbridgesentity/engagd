@@ -20,9 +20,19 @@ const data = Spline_Sans_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Engagd",
+  title: {
+    default: "Engagd",
+    template: "%s · Engagd",
+  },
   description:
     "Invitations, RSVPs, live engagement, and follow-up for events, in one place.",
+  openGraph: {
+    title: "Engagd",
+    description:
+      "Invitations, RSVPs, live engagement, and follow-up for events, in one place.",
+    siteName: "Engagd",
+    type: "website",
+  },
 };
 
 export default function RootLayout({

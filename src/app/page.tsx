@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PLANS } from "@/lib/entitlements";
+import { Logo } from "@/components/logo";
 
 function rands(cents: number): string {
   return `R${(cents / 100).toLocaleString("en-ZA", {
@@ -64,8 +65,9 @@ export default function LandingPage() {
     <main className="min-h-screen bg-ink">
       {/* Nav */}
       <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
-        <span className="font-display text-xl tracking-tight text-fg">
-          engagd<span className="text-signal">.</span>
+        <span className="flex items-baseline gap-0.5 text-fg">
+          <Logo className="h-6 w-auto" />
+          <span className="font-display text-xl leading-none text-signal">.</span>
         </span>
         <nav className="flex items-center gap-6">
           <a href="#pricing" className="hidden text-sm text-fg-dim hover:text-fg sm:block">
@@ -206,8 +208,9 @@ export default function LandingPage() {
 
       <footer className="border-t border-line">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-8 text-sm text-fg-faint">
-          <span className="font-display text-fg-dim">
-            engagd<span className="text-signal">.</span>
+          <span className="flex items-baseline gap-0.5 text-fg-dim">
+            <Logo className="h-5 w-auto" />
+            <span className="font-display leading-none text-signal">.</span>
           </span>
           <span>Made for events that people remember.</span>
         </div>

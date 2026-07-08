@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Button, Input, Label, Select, Textarea } from "@/components/ui";
+import { Wordmark } from "@/components/logo";
 import { submitEnterpriseContact } from "./actions";
 
 const ERROR_COPY: Record<string, string> = {
@@ -21,8 +22,8 @@ export default async function ContactPage({
   return (
     <main className="min-h-screen bg-ink">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
-        <Link href="/" className="font-display text-xl tracking-tight text-fg">
-          engagd<span className="text-signal">.</span>
+        <Link href="/" className="text-xl" aria-label="Engagd home">
+          <Wordmark />
         </Link>
         <nav className="flex items-center gap-6">
           <Link href="/#pricing" className="hidden text-sm text-fg-dim hover:text-fg sm:block">
@@ -148,9 +149,7 @@ export default async function ContactPage({
 
       <footer className="border-t border-line">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-8 text-sm text-fg-faint">
-          <span className="font-display text-fg-dim">
-            engagd<span className="text-signal">.</span>
-          </span>
+          <Wordmark className="text-fg-dim" />
           <span>Made for events that people remember.</span>
         </div>
       </footer>
