@@ -39,7 +39,7 @@ export function SiteHeader() {
       >
         <Link
           href="/"
-          className="text-lg text-fg"
+          className="text-3xl text-fg"
           aria-label="Engagd home"
           onClick={() => setOpen(false)}
         >

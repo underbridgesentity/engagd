@@ -8,7 +8,7 @@ export function Wordmark({ className }: { className?: string }) {
         className ?? ""
       }`}
     >
-      <Logo className="h-[0.7em] w-auto" />
+      <Logo className="h-[0.82em] w-auto" />
       <span className="font-display text-signal">.</span>
     </span>
   );

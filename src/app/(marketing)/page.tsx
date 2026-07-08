@@ -8,6 +8,38 @@ function rands(cents: number): string {
   return `R${(cents / 100).toLocaleString("en-ZA", { maximumFractionDigits: 0 })}`;
 }
 
+function planHighlights(tier: keyof typeof PLANS): string[] {
+  const e = PLANS[tier].entitlements;
+  const out: string[] = [];
+  out.push(
+    e.maxActiveEvents === null
+      ? "Unlimited active events"
+      : `${e.maxActiveEvents} active event${e.maxActiveEvents === 1 ? "" : "s"}`
+  );
+  out.push(
+    e.maxAttendeesPerEvent === null
+      ? "Unlimited attendees"
+      : `${e.maxAttendeesPerEvent.toLocaleString("en-ZA")} attendees / event`
+  );
+  out.push(
+    e.teamSeats === null
+      ? "Custom team seats"
+      : `${e.teamSeats} team seat${e.teamSeats === 1 ? "" : "s"}`
+  );
+  out.push(e.analytics === "full" ? "Full analytics and export" : "Basic analytics");
+  if (e.customBranding) out.push("Custom branding");
+  if (e.paidTicketing) out.push("Paid ticketing");
+  if (e.customDomain) out.push("Own sending domain");
+  return out;
+}
+
+const PLAN_CTA: Record<keyof typeof PLANS, { href: string; label: string }> = {
+  free: { href: "/login", label: "Start free" },
+  starter: { href: "/login", label: "Choose Starter" },
+  professional: { href: "/login", label: "Choose Professional" },
+  enterprise: { href: "/contact", label: "Contact sales" },
+};
+
 const PHASES = [
   {
     n: "01",
@@ -67,7 +99,7 @@ export default function HomePage() {
   return (
     <>
       {/* Hero: the photograph is the background, gently parallaxed. */}
-      <section className="relative isolate -mt-20 flex min-h-[92vh] flex-col justify-center overflow-hidden md:-mt-24">
+      <section className="relative isolate -mt-20 flex min-h-[78vh] flex-col justify-center overflow-hidden md:-mt-24">
         <div className="absolute inset-0 -z-10 overflow-hidden">
           <Parallax speed={0.18} className="absolute inset-[-12%]">
             <Image
@@ -90,9 +122,9 @@ export default function HomePage() {
         />
         <div className="mx-auto w-full max-w-6xl px-6 pt-28 pb-16">
           <Eyebrow>Invite. Engage. Follow up.</Eyebrow>
-          <h1 className="display-tight mt-7 max-w-4xl text-6xl text-fg sm:text-7xl lg:text-[7.5rem]">
+          <h1 className="display-tight mt-6 max-w-3xl text-4xl text-fg sm:text-5xl lg:text-6xl">
             The whole life of your event, in{" "}
-            <span className="italic text-signal">one link.</span>
+            <span className="text-signal">one link.</span>
           </h1>
           <p className="mt-8 max-w-xl text-lg text-fg-dim sm:text-xl">
             RSVPs, door check-in, live polls, and follow-up surveys. One
@@ -231,19 +263,25 @@ export default function HomePage() {
             (tier, i) => {
               const plan = PLANS[tier];
               const featured = tier === "professional";
+              const cta = PLAN_CTA[tier];
               return (
                 <Reveal key={tier} delay={i * 80}>
                   <div
-                    className={`h-full rounded-2xl border p-6 ${
+                    className={`relative flex h-full flex-col rounded-2xl border p-6 ${
                       featured
                         ? "border-signal bg-signal/10"
                         : "border-line bg-raised"
                     }`}
                   >
+                    {featured ? (
+                      <span className="absolute -top-3 left-6 rounded-full bg-signal px-3 py-1 text-xs font-bold uppercase tracking-wide text-ink">
+                        Most popular
+                      </span>
+                    ) : null}
                     <p className="text-sm font-bold uppercase tracking-wide text-fg-dim">
                       {plan.name}
                     </p>
-                    <p className="mt-3 font-display text-4xl font-black tracking-tight text-fg">
+                    <p className="mt-3 font-display text-4xl font-extrabold tracking-tight text-fg">
                       {plan.monthlyPriceCents === null
                         ? "Let's talk"
                         : plan.monthlyPriceCents === 0
@@ -251,14 +289,47 @@ export default function HomePage() {
                           : rands(plan.monthlyPriceCents)}
                     </p>
                     <p className="mt-1 text-xs text-fg-faint">
-                      {plan.monthlyPriceCents ? "per month" : " "}
+                      {plan.monthlyPriceCents ? "per month" : "custom pricing"}
                     </p>
+                    <ul className="mt-6 flex-1 space-y-2.5">
+                      {planHighlights(tier).map((h) => (
+                        <li
+                          key={h}
+                          className="flex gap-2.5 text-sm text-fg-dim"
+                        >
+                          <span
+                            aria-hidden
+                            className="mt-0.5 font-bold text-signal"
+                          >
+                            ✓
+                          </span>
+                          {h}
+                        </li>
+                      ))}
+                    </ul>
+                    <Link
+                      href={cta.href}
+                      className={`mt-7 rounded-full px-5 py-2.5 text-center text-sm font-bold transition-transform hover:-translate-y-0.5 ${
+                        featured
+                          ? "bg-signal text-ink hover:bg-signal-strong"
+                          : "border border-line-strong text-fg hover:border-signal/60"
+                      }`}
+                    >
+                      {cta.label}
+                    </Link>
                   </div>
                 </Reveal>
               );
             }
           )}
         </div>
+        <p className="mt-6 text-sm text-fg-faint">
+          Annual billing gets you two months free. See the{" "}
+          <Link href="/pricing" className="font-semibold text-signal hover:text-signal-strong">
+            full feature comparison
+          </Link>
+          .
+        </p>
       </section>
 
       {/* Closing CTA over a photograph. */}
@@ -273,9 +344,9 @@ export default function HomePage() {
         <div aria-hidden className="absolute inset-0 -z-10 bg-ink/85" />
         <div className="mx-auto max-w-4xl px-6 py-32 text-center">
           <Reveal>
-            <h2 className="display-tight text-balance text-5xl text-fg sm:text-7xl">
+            <h2 className="display-tight text-balance text-4xl text-fg sm:text-5xl">
               Your next event deserves a better{" "}
-              <span className="italic text-signal">run of show.</span>
+              <span className="text-signal">run of show.</span>
             </h2>
             <p className="mx-auto mt-7 max-w-xl text-lg text-fg-dim">
               Set up your first event in minutes. Free to start, no card needed.

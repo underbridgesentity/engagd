@@ -1,15 +1,14 @@
 import type { Metadata } from "next";
-import { Fraunces, Hanken_Grotesk, Spline_Sans_Mono } from "next/font/google";
+import { Archivo, Hanken_Grotesk, Spline_Sans_Mono } from "next/font/google";
 import "./globals.css";
 
-// Fraunces is the display voice: a soft high-contrast serif whose heavy
-// weights read bold and characterful rather than generic. Hanken Grotesk is
-// the clean body companion. The pairing is deliberately not another all-sans.
-const display = Fraunces({
+// Archivo is the display voice: a confident, slightly technical grotesque
+// that reads bold and professional rather than playful. Hanken Grotesk is the
+// clean body companion. Deliberately not Inter, deliberately not a soft serif.
+const display = Archivo({
   subsets: ["latin"],
   variable: "--font-display",
-  weight: ["400", "500", "600", "700", "900"],
-  style: ["normal", "italic"],
+  weight: ["500", "600", "700", "800"],
 });
 const body = Hanken_Grotesk({
   subsets: ["latin"],

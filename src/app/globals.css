@@ -53,22 +53,22 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Headings use Fraunces, heavy and tightly set for a bold editorial voice. */
+/* Headings use Archivo, heavy and tightly set for a bold, professional voice. */
 h1,
 h2,
 h3,
 h4 {
-  font-family: var(--font-display), serif;
+  font-family: var(--font-display), sans-serif;
   font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1.04;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
 }
 
 .display-tight {
-  font-family: var(--font-display), serif;
-  font-weight: 900;
-  letter-spacing: -0.025em;
-  line-height: 0.96;
+  font-family: var(--font-display), sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
 }
 
 .text-balance {
