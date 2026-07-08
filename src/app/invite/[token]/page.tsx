@@ -1,13 +1,11 @@
 import Link from "next/link";
-import { and, eq } from "drizzle-orm";
-import { redirect } from "next/navigation";
+import { eq } from "drizzle-orm";
 import { auth, signOut } from "@/auth";
 import { db } from "@/db";
-import { memberships, organisations, orgInvites } from "@/db/schema";
-import { canAddSeat } from "@/lib/entitlements";
-import { audit } from "@/lib/audit";
+import { organisations, orgInvites } from "@/db/schema";
 import { Button } from "@/components/ui";
 import { Wordmark } from "@/components/logo";
+import { acceptInvite } from "./actions";
 
 // Partially mask an email address for display to a signed-in visitor whose
 // session email does not match the invite: j***@domain.com.
@@ -52,10 +50,13 @@ function State({
 
 export default async function InviteAcceptPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ token: string }>;
+  searchParams: Promise<{ error?: string }>;
 }) {
   const { token } = await params;
+  const { error } = await searchParams;
 
   const [row] = await db
     .select({ invite: orgInvites, org: organisations })
@@ -156,55 +157,27 @@ export default async function InviteAcceptPage({
     );
   }
 
-  // Email matches: accept. Skip membership creation if they already belong.
-  const userId = session.user.id;
-  const [existingMembership] = await db
-    .select({ id: memberships.id })
-    .from(memberships)
-    .where(
-      and(
-        eq(memberships.organisationId, invite.organisationId),
-        eq(memberships.userId, userId)
-      )
-    );
-
-  if (!existingMembership) {
-    // Seat gate re-checked at acceptance: the org may have filled up since
-    // the invite went out.
-    const seat = await canAddSeat(invite.organisationId);
-    if (!seat.allowed) {
-      return (
-        <Shell>
-          <State
-            title="No seats left"
-            body={`${org.name} has used all the seats on its plan since this invite was sent. Ask the person who invited you to free a seat or upgrade, then try the link again.`}
-          />
-        </Shell>
-      );
-    }
-    await db.insert(memberships).values({
-      organisationId: invite.organisationId,
-      userId,
-      role: invite.role,
-    });
-  }
-
-  await db
-    .update(orgInvites)
-    .set({ acceptedAt: new Date() })
-    .where(eq(orgInvites.id, invite.id));
-  await audit({
-    organisationId: invite.organisationId,
-    userId,
-    action: "invite.accepted",
-    entityType: "org_invite",
-    entityId: invite.id,
-    detail: {
-      email: invite.email,
-      role: invite.role,
-      alreadyMember: Boolean(existingMembership),
-    },
-  });
-
-  redirect(`/o/${org.slug}`);
+  // Email matches. Acceptance is an explicit action, never a render side
+  // effect: a prefetch or preload of this page must not consume a seat.
+  const accept = acceptInvite.bind(null, token);
+  return (
+    <Shell>
+      <State
+        title={`Join ${org.name}`}
+        body={`You have been invited to join ${org.name} as ${invite.role}. Accept to get access.`}
+      >
+        {error === "no-seats" ? (
+          <p className="mt-4 rounded-lg border border-ember/40 bg-ember/10 px-3 py-2 text-sm text-ember">
+            {org.name} has used all the seats on its plan. Ask the person who
+            invited you to free a seat or upgrade, then try again.
+          </p>
+        ) : null}
+        <form action={accept} className="mt-6">
+          <Button type="submit" className="w-full">
+            Accept invitation
+          </Button>
+        </form>
+      </State>
+    </Shell>
+  );
 }

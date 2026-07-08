@@ -13,15 +13,7 @@ import {
 } from "@/lib/rsvp";
 import { adapterForEvent } from "@/lib/payments";
 import { issueTicket, issuedCountForType, sendTicketEmail } from "@/lib/tickets";
-
-function baseUrl(): string {
-  return (
-    process.env.NEXTAUTH_URL ??
-    process.env.AUTH_URL ??
-    process.env.NEXT_PUBLIC_APP_URL ??
-    "http://localhost:3000"
-  );
-}
+import { appBaseUrl as baseUrl } from "@/lib/url";
 
 // Public microsite RSVP submission. Scoped purely by the event slug; there
 // is no session on attendee surfaces. Never blocked by attendee caps.
@@ -91,6 +83,33 @@ export async function submitPublicRsvp(
       } catch {
         // Ticket issuance is best effort at RSVP time; organisers can
         // re-issue from the dashboard if needed.
+      }
+    } else if (
+      event.registrationType === "free_ticket" &&
+      parsed.data.choice !== "yes"
+    ) {
+      // The attendee changed away from yes. Void any free ticket they were
+      // issued so it no longer scans at the door or holds a seat. Best
+      // effort: never break the RSVP save itself.
+      try {
+        const [attendee] = await db
+          .select({ id: attendees.id })
+          .from(attendees)
+          .where(eq(attendees.qrToken, qrToken));
+        if (attendee) {
+          await db
+            .update(tickets)
+            .set({ paymentStatus: "failed" })
+            .where(
+              and(
+                eq(tickets.attendeeId, attendee.id),
+                eq(tickets.eventId, event.id),
+                eq(tickets.paymentStatus, "not_required")
+              )
+            );
+        }
+      } catch {
+        // Non-fatal: organisers can void the ticket from the dashboard.
       }
     }
 

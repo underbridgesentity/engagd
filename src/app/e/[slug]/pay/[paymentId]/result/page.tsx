@@ -15,10 +15,13 @@ export const dynamic = "force-dynamic";
 // provider API before anything is shown or issued.
 export default async function PaymentResultPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string; paymentId: string }>;
+  searchParams: Promise<{ state?: string }>;
 }) {
   const { slug, paymentId } = await params;
+  const { state } = await searchParams;
   const event = await getPublicEventBySlug(slug);
   if (!event) notFound();
 
@@ -42,10 +45,11 @@ export default async function PaymentResultPage({
       const result = await adapter.verifyPayment(payment.providerReference);
       if (result.paid) {
         if (
-          result.amountCents !== null &&
+          result.amountCents === null ||
           result.amountCents !== payment.amountCents
         ) {
-          // Paid, but for the wrong amount. Never issue a ticket for this.
+          // Paid, but the amount does not match (or the provider did not
+          // report one, so we cannot confirm it). Never issue a ticket.
           await db
             .update(payments)
             .set({
@@ -67,6 +71,25 @@ export default async function PaymentResultPage({
           verified = true;
           status = "paid";
         }
+      } else if (state === "cancel" || state === "failure") {
+        // The provider confirms no payment and the attendee came back via
+        // the cancel or failure redirect. Release the reservation so the
+        // seat frees and they can start a fresh checkout. The state param
+        // only ever releases a reservation here, it never grants a ticket.
+        await db
+          .update(payments)
+          .set({ status: "failed", verifiedAt: new Date() })
+          .where(eq(payments.id, payment.id));
+        await db
+          .update(tickets)
+          .set({ paymentStatus: "failed" })
+          .where(
+            and(
+              eq(tickets.paymentId, payment.id),
+              eq(tickets.paymentStatus, "pending")
+            )
+          );
+        status = "failed";
       } else {
         status = "pending";
       }

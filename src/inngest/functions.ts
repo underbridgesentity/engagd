@@ -3,8 +3,9 @@ import { db } from "@/db";
 import { attendees, checkIns, emailCampaigns, events, invitations } from "@/db/schema";
 import { orgReplyTo, sendEmail } from "@/lib/email";
 import { inngest } from "@/lib/jobs";
+import { appBaseUrl } from "@/lib/url";
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+const APP_URL = appBaseUrl();
 
 type AttendeeRow = typeof attendees.$inferSelect;
 

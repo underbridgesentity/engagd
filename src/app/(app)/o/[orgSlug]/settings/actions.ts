@@ -10,18 +10,10 @@ import { requireOrg } from "@/lib/tenancy";
 import { getEntitlements } from "@/lib/entitlements";
 import { audit } from "@/lib/audit";
 import { sendEmail } from "@/lib/email";
+import { appBaseUrl as baseUrl } from "@/lib/url";
 
 function back(orgSlug: string, param: string): never {
   redirect(`/o/${orgSlug}/settings?${param}`);
-}
-
-function baseUrl(): string {
-  return (
-    process.env.NEXTAUTH_URL ??
-    process.env.AUTH_URL ??
-    process.env.NEXT_PUBLIC_APP_URL ??
-    "http://localhost:3000"
-  );
 }
 
 async function sendVerificationEmail(email: string, token: string, orgName: string) {

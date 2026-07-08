@@ -138,8 +138,16 @@ export type VerifyOutcome =
   | { status: "failed" };
 
 function periodEnd(from: Date, interval: BillingIntervalValue): Date {
+  const monthsToAdd = interval === "annual" ? 12 : 1;
   const end = new Date(from);
-  end.setMonth(end.getMonth() + (interval === "annual" ? 12 : 1));
+  const targetMonth = end.getMonth() + monthsToAdd;
+  end.setMonth(targetMonth);
+  // Guard against JS month rollover: adding a month to Jan 31 would land on
+  // Mar 3, skipping February and granting extra days. If the day slipped,
+  // clamp back to the last day of the intended month.
+  if (end.getMonth() !== ((targetMonth % 12) + 12) % 12) {
+    end.setDate(0);
+  }
   return end;
 }
 

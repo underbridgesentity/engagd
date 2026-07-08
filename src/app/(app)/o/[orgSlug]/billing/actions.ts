@@ -14,15 +14,12 @@ import {
   PaymentsNotConfiguredError,
   startSubscriptionCheckout,
 } from "@/lib/billing";
+import { appBaseUrl } from "@/lib/url";
 
 const schema = z.object({
   tier: z.enum(["free", "starter", "professional", "enterprise"]),
   interval: z.enum(["monthly", "annual"]),
 });
-
-function appBaseUrl(): string {
-  return process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-}
 
 // Real payment collection: paid tiers go through a Paystack checkout with
 // Engagd's platform key; only the server-side verify applies the change.

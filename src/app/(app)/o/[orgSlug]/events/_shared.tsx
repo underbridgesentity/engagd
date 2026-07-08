@@ -1,7 +1,8 @@
 import { Badge } from "@/components/ui";
 import type { AttendeeCapState } from "@/lib/entitlements";
+import { appBaseUrl } from "@/lib/url";
 
-export const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+export const APP_URL = appBaseUrl();
 
 export function slugify(input: string) {
   return input

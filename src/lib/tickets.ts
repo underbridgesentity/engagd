@@ -116,10 +116,13 @@ export async function issueTicket(
 // Flip a pending paid ticket to paid once the provider has verified the
 // payment. Sets issuedAt so the ticket becomes valid at the door.
 export async function markTicketPaid(ticketId: string): Promise<void> {
+  // Only a pending reservation may be promoted. Guarding on the current
+  // status stops a late or duplicated callback from resurrecting a ticket
+  // that was already failed or refunded into a valid door ticket.
   await db
     .update(tickets)
     .set({ paymentStatus: "paid", issuedAt: new Date() })
-    .where(eq(tickets.id, ticketId));
+    .where(and(eq(tickets.id, ticketId), eq(tickets.paymentStatus, "pending")));
 }
 
 function formatEventDate(

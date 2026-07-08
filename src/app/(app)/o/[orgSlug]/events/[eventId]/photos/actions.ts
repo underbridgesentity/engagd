@@ -14,8 +14,9 @@ import {
   storageConfigured,
 } from "@/lib/storage";
 import { requireOrg, requireOrgEvent } from "@/lib/tenancy";
+import { appBaseUrl } from "@/lib/url";
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+const APP_URL = appBaseUrl();
 
 function photosPath(orgSlug: string, eventId: string) {
   return `/o/${orgSlug}/events/${eventId}/photos`;

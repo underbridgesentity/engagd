@@ -11,6 +11,7 @@ import { requireOrg, type OrgContext } from "@/lib/tenancy";
 import { canAddSeat, getEntitlements } from "@/lib/entitlements";
 import { audit } from "@/lib/audit";
 import { sendEmail } from "@/lib/email";
+import { appBaseUrl as baseUrl } from "@/lib/url";
 
 const roleEnum = z.enum(["owner", "admin", "viewer"]);
 
@@ -18,15 +19,6 @@ const INVITE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 function back(orgSlug: string, param: string): never {
   redirect(`/o/${orgSlug}/team?${param}`);
-}
-
-function baseUrl(): string {
-  return (
-    process.env.NEXTAUTH_URL ??
-    process.env.AUTH_URL ??
-    process.env.NEXT_PUBLIC_APP_URL ??
-    "http://localhost:3000"
-  );
 }
 
 async function ownerCount(organisationId: string): Promise<number> {
