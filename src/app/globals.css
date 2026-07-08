@@ -1,20 +1,23 @@
 @import "tailwindcss";
 
 :root {
-  --ink: #0b0e14;
-  --ink-2: #0f1420;
-  --raised: #131824;
-  --raised-2: #1a2131;
-  --line: #232b3d;
-  --line-strong: #2f3a52;
-  --text: #e8ecf4;
-  --text-dim: #9aa5bc;
-  --text-faint: #667089;
-  --signal: #5b8cff;
-  --signal-strong: #7da3ff;
-  --ember: #ffb454;
-  --mint: #3ed598;
-  --coral: #ff5c5c;
+  /* Warm dark charcoal neutrals, a shade lighter and warmer than the old
+     blue-black so the app reads inviting rather than gloomy. */
+  --ink: #100d0a;
+  --ink-2: #17130e;
+  --raised: #1e1912;
+  --raised-2: #282017;
+  --line: #352d22;
+  --line-strong: #493d2d;
+  --text: #f4efe7;
+  --text-dim: #b6a893;
+  --text-faint: #877a67;
+  /* Bright orange is the primary accent. */
+  --signal: #ff7a1a;
+  --signal-strong: #ff9648;
+  --ember: #ffc061;
+  --mint: #46cf9a;
+  --coral: #ff5a52;
 }
 
 @theme inline {
