@@ -1,36 +1,35 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Engagd
 
-## Getting Started
+All-in-one event lifecycle and engagement platform: invitations and RSVPs, live day-of engagement, and post-event follow-up. Organisers get a dashboard; attendees stay accountless throughout (invite link, RSVP page, QR at the door).
 
-First, run the development server:
+## Stack
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- Next.js (App Router, TypeScript) on Vercel
+- PostgreSQL via Drizzle ORM (serverless-friendly pooling, prepared statements off)
+- Auth.js: email magic link (Resend) plus optional Google OAuth, organiser accounts only
+- Resend for transactional and campaign email
+- Inngest for scheduled sends and reminders (behind src/lib/jobs)
+- Realtime abstraction in src/lib/realtime (Phase 2 wires a provider)
+- Payment provider abstraction (Phase 2: Yoco primary, Paystack optional)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Local development
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. `cp .env.example .env.local` and fill in values. Minimum for local dev: `DATABASE_URL`, `AUTH_SECRET`, `RESEND_API_KEY`, `ENCRYPTION_KEY`.
+2. Create the database: `createdb engagd`
+3. Apply migrations: `npx drizzle-kit migrate`
+4. Optionally seed: `npx tsx scripts/seed.ts`
+5. `npm run dev`
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Architecture notes
 
-## Learn More
+- Multi-tenancy: every record belongs to an organisation. All organiser-side reads and writes resolve through `requireOrg` / `requireOrgEvent` in `src/lib/tenancy.ts`. There is no cross-tenant access path.
+- Entitlements: plan limits live in `src/lib/entitlements/plans.ts` only. Feature code calls `getEntitlements`, `canActivateEvent` (hard gate), `attendeeCapState` (soft wall, never blocks public RSVP links), and `canAddSeat`. Per-org overrides support enterprise custom limits.
+- Roles: owner, admin, viewer are seat-consuming memberships. Check-in staff use event-scoped access records (`check_in_staff_access`) and never consume seats.
+- Attendee identity is an opaque `qrToken` used in personal links (`/r/{token}`) and door QR codes. No PII in query strings.
+- Payment secrets are AES-256-GCM encrypted at rest (`src/lib/crypto.ts`), server-side only. Payments are verified server-side, never trusted from redirects.
 
-To learn more about Next.js, take a look at the following resources:
+## Phases
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Phase 1 (this build): full schema, tenancy, auth, entitlements, Module A (events, microsite, CSV import, invitations, reminders), reply-to verification, billing scaffolding, analytics skeleton.
+- Phase 2: live polls, Q&A, check-in scanner, ticketing and Yoco payments, custom sending domains.
+- Phase 3: surveys, mailers, photo delivery, full analytics, Paystack adapter.

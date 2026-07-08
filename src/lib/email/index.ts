@@ -3,10 +3,14 @@ import { and, eq, isNotNull } from "drizzle-orm";
 import { db } from "@/db";
 import { replyToVerifications } from "@/db/schema";
 
+// Lazy so builds and tooling work without a key; sending requires one.
 const globalForResend = globalThis as unknown as { resend?: Resend };
-export const resend =
-  globalForResend.resend ?? new Resend(process.env.RESEND_API_KEY);
-if (process.env.NODE_ENV !== "production") globalForResend.resend = resend;
+export function resend(): Resend {
+  if (!globalForResend.resend) {
+    globalForResend.resend = new Resend(process.env.RESEND_API_KEY);
+  }
+  return globalForResend.resend;
+}
 
 export const PLATFORM_FROM =
   process.env.EMAIL_FROM ?? "Engagd <events@mail.engagd.co.za>";
@@ -37,7 +41,7 @@ export async function sendEmail(opts: {
   replyTo?: string;
   from?: string;
 }) {
-  const { data, error } = await resend.emails.send({
+  const { data, error } = await resend().emails.send({
     from: opts.from ?? PLATFORM_FROM,
     to: opts.to,
     subject: opts.subject,
