@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { PLANS } from "@/lib/entitlements";
 import { Logo } from "@/components/logo";
 
@@ -15,6 +16,7 @@ const LIFECYCLE = [
     body: "Import your guest list, send branded invitations, and watch RSVPs arrive in real time. Plus-ones, dietary notes, and custom questions included.",
     accent: "text-signal-strong",
     ring: "border-signal/40",
+    img: "/img/lifecycle-invite.jpg",
   },
   {
     phase: "02 / During",
@@ -22,6 +24,7 @@ const LIFECYCLE = [
     body: "QR check-in at the door, live polls on the big screen, and audience questions with upvoting. No app downloads, just a link.",
     accent: "text-ember",
     ring: "border-ember/40",
+    img: "/img/lifecycle-engage.jpg",
   },
   {
     phase: "03 / After",
@@ -29,6 +32,7 @@ const LIFECYCLE = [
     body: "Feedback surveys, photo galleries, and attendance analytics land in your inbox before the chairs are stacked.",
     accent: "text-mint",
     ring: "border-mint/40",
+    img: "/img/lifecycle-followup.jpg",
   },
 ];
 
@@ -112,6 +116,23 @@ export default function LandingPage() {
             See how it works
           </a>
         </div>
+
+        <div className="relative mt-14 overflow-hidden rounded-2xl border border-line-strong">
+          <div className="relative aspect-[2/1]">
+            <Image
+              src="/img/hero.jpg"
+              alt="A packed audience facing a lit stage at a live event"
+              fill
+              priority
+              sizes="(max-width: 1152px) 100vw, 1152px"
+              className="object-cover"
+            />
+          </div>
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 bg-gradient-to-t from-ink via-ink/10 to-transparent"
+          />
+        </div>
       </section>
 
       {/* Lifecycle */}
@@ -120,13 +141,28 @@ export default function LandingPage() {
           {LIFECYCLE.map((s) => (
             <div
               key={s.phase}
-              className={`rounded-[10px] border bg-raised p-6 ${s.ring}`}
+              className={`overflow-hidden rounded-[10px] border bg-raised ${s.ring}`}
             >
+              <div className="relative aspect-[4/3]">
+                <Image
+                  src={s.img}
+                  alt=""
+                  fill
+                  sizes="(max-width: 768px) 100vw, 384px"
+                  className="object-cover"
+                />
+                <div
+                  aria-hidden
+                  className="pointer-events-none absolute inset-0 bg-gradient-to-t from-raised via-raised/20 to-transparent"
+                />
+              </div>
+              <div className="p-6">
               <p className={`font-data text-xs uppercase tracking-widest ${s.accent}`}>
                 {s.phase}
               </p>
               <h2 className="mt-3 font-display text-xl text-fg">{s.title}</h2>
               <p className="mt-2 text-sm leading-relaxed text-fg-dim">{s.body}</p>
+              </div>
             </div>
           ))}
         </div>

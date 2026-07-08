@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Button, Input, Label, Select, Textarea } from "@/components/ui";
 import { Wordmark } from "@/components/logo";
 import { submitEnterpriseContact } from "./actions";
@@ -54,6 +55,22 @@ export default async function ContactPage({
           human who answers. Tell us a little about what you are planning and
           we will get back to you within one working day.
         </p>
+
+        <div className="relative mt-10 overflow-hidden rounded-2xl border border-line-strong">
+          <div className="relative aspect-[16/9]">
+            <Image
+              src="/img/contact.jpg"
+              alt="Cape Town at dusk"
+              fill
+              sizes="(max-width: 672px) 100vw, 672px"
+              className="object-cover"
+            />
+          </div>
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 bg-gradient-to-t from-ink via-ink/10 to-transparent"
+          />
+        </div>
 
         {sent ? (
           <div className="mt-10 rounded-[10px] border border-mint/40 bg-mint/10 p-8">

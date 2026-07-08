@@ -130,14 +130,12 @@ export default async function EventMicrositePage({
 
   return (
     <MicrositeShell config={event.micrositeConfig}>
-      {event.coverImageUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={event.coverImageUrl}
-          alt=""
-          className="mt-4 aspect-[2/1] w-full rounded-[10px] border border-line object-cover"
-        />
-      ) : null}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={event.coverImageUrl ?? "/img/microsite-fallback.jpg"}
+        alt=""
+        className="mt-4 aspect-[2/1] w-full rounded-[10px] border border-line object-cover"
+      />
 
       <header className="mt-8">
         <EventLogo config={event.micrositeConfig} />

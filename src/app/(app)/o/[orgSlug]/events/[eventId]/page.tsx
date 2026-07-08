@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { count, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { attendees } from "@/db/schema";
@@ -36,6 +37,23 @@ export default async function EventOverviewPage({
   return (
     <div className="space-y-6">
       <CapBanner cap={cap} orgSlug={orgSlug} />
+
+      <div className="relative overflow-hidden rounded-[10px] border border-line">
+        <div className="relative aspect-[3/1]">
+          <Image
+            src={event.coverImageUrl ?? "/img/event-cover-default.jpg"}
+            alt=""
+            fill
+            sizes="(max-width: 1024px) 100vw, 1024px"
+            className="object-cover"
+            unoptimized={Boolean(event.coverImageUrl)}
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 bg-gradient-to-t from-ink via-ink/20 to-transparent"
+          />
+        </div>
+      </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         <StatTile label="Invited" value={byStatus.invited ?? 0} />
