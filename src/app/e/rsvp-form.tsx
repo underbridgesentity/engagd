@@ -306,6 +306,14 @@ function PlusOnesStepper({
   );
 }
 
+// Paid ticket selection shown after a successful yes RSVP on paid events.
+export type TicketOfferType = {
+  id: string;
+  name: string;
+  priceLabel: string;
+  soldOut: boolean;
+};
+
 export function RsvpForm({
   action,
   config,
@@ -313,6 +321,9 @@ export function RsvpForm({
   defaults = {},
   submitLabel,
   variant,
+  successNote,
+  ticketTypes,
+  checkoutAction,
 }: {
   action: (state: RsvpFormState, formData: FormData) => Promise<RsvpFormState>;
   config: RsvpFormConfig;
@@ -322,15 +333,30 @@ export function RsvpForm({
   // public: first-time RSVP from the microsite. personal: updating an
   // existing RSVP from the /r/[token] page.
   variant: "public" | "personal";
+  // Extra line shown in the success state, for example a free ticket note.
+  successNote?: string;
+  // When present (paid ticket events), the success state offers ticket
+  // selection and posts to the checkout server action.
+  ticketTypes?: TicketOfferType[];
+  checkoutAction?: (formData: FormData) => Promise<void>;
 }) {
   const [state, formAction, pending] = useActionState<RsvpFormState, FormData>(
     action,
     { status: "idle" }
   );
+  const [chosen, setChosen] = useState<RsvpChoice | null>(
+    defaults.choice ?? null
+  );
   const errors = state.status === "error" ? state.errors : {};
 
   if (state.status === "success") {
     const personalLink = `/r/${state.qrToken}`;
+    const offerTickets =
+      variant === "public" &&
+      chosen === "yes" &&
+      checkoutAction &&
+      ticketTypes &&
+      ticketTypes.length > 0;
     return (
       <div
         role="status"
@@ -344,6 +370,53 @@ export function RsvpForm({
             ? "Thanks for responding. Your personal link is below."
             : "Your changes have been saved."}
         </p>
+        {successNote && chosen === "yes" ? (
+          <p className="mt-2 text-sm font-medium text-fg">{successNote}</p>
+        ) : null}
+        {offerTickets ? (
+          <form
+            action={checkoutAction}
+            className="mt-5 rounded-lg border border-line bg-ink-2 p-4 text-left"
+          >
+            <p className="font-display text-lg text-fg">Choose your ticket</p>
+            <p className="mt-1 text-sm text-fg-dim">
+              You will be redirected to a secure payment page.
+            </p>
+            <input type="hidden" name="qrToken" value={state.qrToken} />
+            <div className="mt-3 space-y-2">
+              {ticketTypes.map((t) => (
+                <label
+                  key={t.id}
+                  className={`flex min-h-12 items-center justify-between gap-3 rounded-lg border border-line bg-raised px-3 py-2.5 text-sm text-fg has-[:checked]:border-signal has-[:checked]:bg-signal/10 ${
+                    t.soldOut ? "opacity-50" : "cursor-pointer"
+                  }`}
+                >
+                  <span className="flex items-center gap-3">
+                    <input
+                      type="radio"
+                      name="ticketTypeId"
+                      value={t.id}
+                      required
+                      disabled={t.soldOut}
+                      className="h-4 w-4 accent-[var(--signal)]"
+                    />
+                    {t.name}
+                    {t.soldOut ? (
+                      <span className="text-xs text-coral">Sold out</span>
+                    ) : null}
+                  </span>
+                  <span className="font-data">{t.priceLabel}</span>
+                </label>
+              ))}
+            </div>
+            <button
+              type="submit"
+              className="mt-4 w-full rounded-lg bg-signal px-4 py-3 text-base font-medium text-ink transition-colors hover:bg-signal-strong"
+            >
+              Continue to payment
+            </button>
+          </form>
+        ) : null}
         <a
           href={personalLink}
           className="mt-4 inline-block w-full rounded-lg bg-signal px-4 py-3 text-base font-medium text-ink"
@@ -385,6 +458,7 @@ export function RsvpForm({
                 name="choice"
                 value={c.value}
                 defaultChecked={defaults.choice === c.value}
+                onChange={() => setChosen(c.value)}
                 className="sr-only"
               />
               <span className="font-medium text-fg">{c.label}</span>

@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 import { asc, eq } from "drizzle-orm";
 import { db } from "@/db";
-import { eventProgramItems } from "@/db/schema";
+import { eventProgramItems, ticketTypes } from "@/db/schema";
+import { issuedCountForType } from "@/lib/tickets";
 import { getEventQuestions, getPublicEventBySlug } from "@/lib/rsvp";
 import {
   EventLogo,
@@ -9,8 +10,8 @@ import {
   MicrositeShell,
   ProgramTimeline,
 } from "../microsite";
-import { RsvpForm } from "../rsvp-form";
-import { submitPublicRsvp } from "./actions";
+import { RsvpForm, type TicketOfferType } from "../rsvp-form";
+import { startTicketCheckout, submitPublicRsvp } from "./actions";
 
 export async function generateMetadata({
   params,
@@ -50,6 +51,32 @@ export default async function EventMicrositePage({
   const isCompleted = event.status === "completed";
   const rsvpOpen = event.status === "active" && event.publicRsvpEnabled;
 
+  // Paid ticket events: offer ticket selection after a yes RSVP. Prices are
+  // display-only here; the checkout action re-validates everything.
+  let paidTicketOffer: TicketOfferType[] | undefined;
+  if (event.registrationType === "paid_ticket" && rsvpOpen) {
+    const types = await db
+      .select()
+      .from(ticketTypes)
+      .where(eq(ticketTypes.eventId, event.id))
+      .orderBy(asc(ticketTypes.sortOrder), asc(ticketTypes.createdAt));
+    const paidTypes = types.filter((t) => t.priceCents > 0);
+    paidTicketOffer = await Promise.all(
+      paidTypes.map(async (t) => ({
+        id: t.id,
+        name: t.name,
+        priceLabel: `R${(t.priceCents / 100).toFixed(2)}`,
+        soldOut:
+          t.quantity !== null &&
+          (await issuedCountForType(t.id)) >= t.quantity,
+      }))
+    );
+    if (paidTicketOffer.length === 0) paidTicketOffer = undefined;
+  }
+  const checkoutAction = paidTicketOffer
+    ? startTicketCheckout.bind(null, event.slug)
+    : undefined;
+
   return (
     <MicrositeShell config={event.micrositeConfig}>
       {event.coverImageUrl ? (
@@ -75,6 +102,23 @@ export default async function EventMicrositePage({
         <p className="mt-6 whitespace-pre-line text-[15px] leading-relaxed text-fg-dim">
           {event.description}
         </p>
+      ) : null}
+
+      {event.status === "active" ? (
+        <a
+          href={`/e/${event.slug}/live`}
+          className="mt-8 flex items-center justify-between rounded-[10px] border border-signal/40 bg-signal/10 p-5 text-fg transition-colors hover:bg-signal/15"
+        >
+          <span>
+            <span className="block font-medium">Live polls and Q&amp;A</span>
+            <span className="mt-0.5 block text-sm text-fg-dim">
+              Vote in polls and ask the speakers questions.
+            </span>
+          </span>
+          <span aria-hidden className="font-data text-signal-strong">
+            &rarr;
+          </span>
+        </a>
       ) : null}
 
       <ProgramTimeline items={program} timezone={event.timezone} />
@@ -106,6 +150,13 @@ export default async function EventMicrositePage({
                 collectDietary: event.collectDietary,
               }}
               questions={questions}
+              successNote={
+                event.registrationType === "free_ticket"
+                  ? "Your ticket is on its way to your inbox."
+                  : undefined
+              }
+              ticketTypes={paidTicketOffer}
+              checkoutAction={checkoutAction}
             />
           </div>
         ) : (

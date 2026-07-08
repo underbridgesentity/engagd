@@ -99,6 +99,28 @@ export default async function SettingsPage({
         </p>
       </Card>
 
+      {ctx.role !== "viewer" ? (
+        <div className="mt-6 grid gap-4 sm:grid-cols-2">
+          <Link href={`/o/${orgSlug}/settings/payments`} className="block">
+            <Card className="h-full transition-colors hover:border-signal/60">
+              <h2 className="font-display text-lg text-fg">Payments</h2>
+              <p className="mt-2 text-sm text-fg-dim">
+                Connect a payment provider to sell tickets. Payouts go straight
+                to your account.
+              </p>
+            </Card>
+          </Link>
+          <Link href={`/o/${orgSlug}/settings/domain`} className="block">
+            <Card className="h-full transition-colors hover:border-signal/60">
+              <h2 className="font-display text-lg text-fg">Sending domain</h2>
+              <p className="mt-2 text-sm text-fg-dim">
+                Send event emails from your own domain with SPF and DKIM.
+              </p>
+            </Card>
+          </Link>
+        </div>
+      ) : null}
+
       <Card className="mt-6">
         <h2 className="font-display text-lg text-fg">Reply-to address</h2>
         <p className="mt-2 text-sm leading-relaxed text-fg-dim">

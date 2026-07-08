@@ -18,8 +18,11 @@ export default async function EventLayout({
     { href: base, label: "Overview" },
     { href: `${base}/attendees`, label: "Attendees" },
     { href: `${base}/invites`, label: "Invites" },
+    { href: `${base}/tickets`, label: "Tickets" },
     { href: `${base}/questions`, label: "Questions" },
     { href: `${base}/program`, label: "Program" },
+    { href: `${base}/live`, label: "Live" },
+    { href: `${base}/checkin`, label: "Check-in" },
     { href: `${base}/edit`, label: "Edit" },
   ];
 
