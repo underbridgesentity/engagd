@@ -35,8 +35,9 @@
   --color-ember: var(--ember);
   --color-mint: var(--mint);
   --color-coral: var(--coral);
-  --font-display: var(--font-display);
-  --font-body: var(--font-body);
+  /* Inter carries display and body; data stays monospace for small labels. */
+  --font-display: var(--font-sans);
+  --font-body: var(--font-sans);
   --font-data: var(--font-data);
 }
 
@@ -47,15 +48,31 @@ html {
 body {
   background: var(--ink);
   color: var(--text);
-  font-family: var(--font-body), sans-serif;
+  font-family: var(--font-sans), sans-serif;
   -webkit-font-smoothing: antialiased;
+  font-feature-settings: "cv05" 1, "ss01" 1;
 }
 
+/* Headings are heavy and tightly tracked so Inter reads bold, not default. */
 h1,
 h2,
-h3 {
-  font-family: var(--font-display), sans-serif;
-  letter-spacing: -0.02em;
+h3,
+h4 {
+  font-family: var(--font-sans), sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.03;
+}
+
+/* Oversized display headings get even tighter tracking. */
+.display-tight {
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 0.98;
+}
+
+.text-balance {
+  text-wrap: balance;
 }
 
 :focus-visible {
