@@ -1,6 +1,10 @@
 import { and, count, eq, inArray, ne } from "drizzle-orm";
 import QRCode from "qrcode";
 import { db } from "@/db";
+
+// Either the pooled db handle or an open transaction. Seat accounting runs
+// inside a transaction so the count-and-insert cannot race.
+type DbOrTx = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0];
 import { attendees, events, ticketTypes, tickets } from "@/db/schema";
 import { orgReplyTo, sendEmail } from "@/lib/email";
 import { orgFrom } from "@/lib/email/sender";
@@ -21,9 +25,10 @@ const SEAT_HOLDING: Array<
 > = ["not_required", "pending", "paid"];
 
 export async function issuedCountForType(
-  ticketTypeId: string
+  ticketTypeId: string,
+  tx: DbOrTx = db
 ): Promise<number> {
-  const [row] = await db
+  const [row] = await tx
     .select({ n: count() })
     .from(tickets)
     .where(
@@ -44,56 +49,68 @@ export async function issueTicket(
     paymentStatus?: (typeof tickets.$inferSelect)["paymentStatus"];
   } = {}
 ): Promise<IssueTicketResult> {
-  const [type] = await db
-    .select()
-    .from(ticketTypes)
-    .where(
-      and(eq(ticketTypes.id, ticketTypeId), eq(ticketTypes.eventId, eventId))
-    );
-  if (!type) return { ok: false, error: "not_found" };
-
-  // Idempotency: one ticket per attendee per event. If a live ticket
-  // already exists, return it instead of double-issuing.
-  const [existing] = await db
-    .select({ id: tickets.id, qrToken: tickets.qrToken })
-    .from(tickets)
-    .where(
-      and(
-        eq(tickets.eventId, eventId),
-        eq(tickets.attendeeId, attendeeId),
-        ne(tickets.paymentStatus, "failed")
+  // The whole check-and-insert runs in one transaction that first takes a
+  // row lock on the ticket type. Concurrent issuances for the same type
+  // serialize here, so the idempotency check and the quantity check both
+  // see a consistent count and cannot oversell or double-issue.
+  return db.transaction(async (tx) => {
+    const [type] = await tx
+      .select()
+      .from(ticketTypes)
+      .where(
+        and(eq(ticketTypes.id, ticketTypeId), eq(ticketTypes.eventId, eventId))
       )
-    )
-    .limit(1);
-  if (existing) {
+      .for("update");
+    if (!type) return { ok: false, error: "not_found" };
+
+    // Idempotency: one ticket per attendee per event. If a live ticket
+    // already exists, return it instead of double-issuing.
+    const [existing] = await tx
+      .select({ id: tickets.id, qrToken: tickets.qrToken })
+      .from(tickets)
+      .where(
+        and(
+          eq(tickets.eventId, eventId),
+          eq(tickets.attendeeId, attendeeId),
+          ne(tickets.paymentStatus, "failed")
+        )
+      )
+      .limit(1);
+    if (existing) {
+      return {
+        ok: true,
+        ticketId: existing.id,
+        qrToken: existing.qrToken,
+        alreadyIssued: true,
+      };
+    }
+
+    if (type.quantity !== null) {
+      const issued = await issuedCountForType(ticketTypeId, tx);
+      if (issued >= type.quantity) return { ok: false, error: "sold_out" };
+    }
+
+    const paymentStatus =
+      opts.paymentStatus ?? (type.priceCents === 0 ? "not_required" : "pending");
+
+    const [row] = await tx
+      .insert(tickets)
+      .values({
+        eventId,
+        attendeeId,
+        ticketTypeId,
+        paymentStatus,
+        paymentId: opts.paymentId ?? null,
+        issuedAt: paymentStatus === "pending" ? null : new Date(),
+      })
+      .returning({ id: tickets.id, qrToken: tickets.qrToken });
     return {
       ok: true,
-      ticketId: existing.id,
-      qrToken: existing.qrToken,
-      alreadyIssued: true,
+      ticketId: row.id,
+      qrToken: row.qrToken,
+      alreadyIssued: false,
     };
-  }
-
-  if (type.quantity !== null) {
-    const issued = await issuedCountForType(ticketTypeId);
-    if (issued >= type.quantity) return { ok: false, error: "sold_out" };
-  }
-
-  const paymentStatus =
-    opts.paymentStatus ?? (type.priceCents === 0 ? "not_required" : "pending");
-
-  const [row] = await db
-    .insert(tickets)
-    .values({
-      eventId,
-      attendeeId,
-      ticketTypeId,
-      paymentStatus,
-      paymentId: opts.paymentId ?? null,
-      issuedAt: paymentStatus === "pending" ? null : new Date(),
-    })
-    .returning({ id: tickets.id, qrToken: tickets.qrToken });
-  return { ok: true, ticketId: row.id, qrToken: row.qrToken, alreadyIssued: false };
+  });
 }
 
 // Flip a pending paid ticket to paid once the provider has verified the
