@@ -1,23 +1,23 @@
 @import "tailwindcss";
 
 :root {
-  /* Warm dark charcoal neutrals, a shade lighter and warmer than the old
-     blue-black so the app reads inviting rather than gloomy. */
-  --ink: #100d0a;
-  --ink-2: #17130e;
-  --raised: #1e1912;
-  --raised-2: #282017;
-  --line: #352d22;
-  --line-strong: #493d2d;
-  --text: #f4efe7;
-  --text-dim: #b6a893;
-  --text-faint: #877a67;
-  /* Bright orange is the primary accent. */
-  --signal: #ff7a1a;
-  --signal-strong: #ff9648;
-  --ember: #ffc061;
-  --mint: #46cf9a;
-  --coral: #ff5a52;
+  /* Cool neutral charcoal, kept a touch lighter than a pure blue-black so it
+     reads modern rather than gloomy. Blue accent pairs with the warm photos. */
+  --ink: #0c0e13;
+  --ink-2: #11141c;
+  --raised: #161a24;
+  --raised-2: #1f2431;
+  --line: #262d3b;
+  --line-strong: #333c4e;
+  --text: #eef1f6;
+  --text-dim: #9aa5b8;
+  --text-faint: #667085;
+  /* Blue is the primary accent. */
+  --signal: #5b8cff;
+  --signal-strong: #7da3ff;
+  --ember: #ffb454;
+  --mint: #3ed598;
+  --coral: #ff5c5c;
 }
 
 @theme inline {

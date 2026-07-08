@@ -68,7 +68,7 @@ export function MarketingFooter() {
   );
 }
 
-// Shared section eyebrow: a small orange label with a leading rule, set in
+// Shared section eyebrow: a small accent label with a leading rule, set in
 // the body face rather than a monospace to avoid the generic tech look.
 export function Eyebrow({ children }: { children: React.ReactNode }) {
   return (
