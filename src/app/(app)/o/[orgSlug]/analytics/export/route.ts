@@ -1,10 +1,14 @@
 import { requireOrg } from "@/lib/tenancy";
 import { getEntitlements } from "@/lib/entitlements";
-import { orgAnalytics } from "@/lib/analytics";
+import { orgAnalyticsFull } from "@/lib/analytics";
 
 function csvField(value: string | number): string {
   const s = String(value);
   return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+
+function pctCell(value: number | null): string {
+  return value === null ? "" : String(Math.round(value * 100));
 }
 
 export async function GET(
@@ -21,7 +25,7 @@ export async function GET(
     );
   }
 
-  const rows = await orgAnalytics(ctx.organisationId);
+  const rows = await orgAnalyticsFull(ctx.organisationId);
   const header = [
     "event",
     "status",
@@ -34,6 +38,20 @@ export async function GET(
     "maybe",
     "waitlisted",
     "rsvp_conversion_pct",
+    "checked_in",
+    "check_in_rate_pct",
+    "polls",
+    "poll_votes",
+    "poll_voters",
+    "poll_participation_pct",
+    "questions_submitted",
+    "questions_approved",
+    "questions_answered",
+    "question_upvotes",
+    "surveys",
+    "survey_responses",
+    "attendees_with_email",
+    "survey_response_rate_pct",
   ];
   const lines = [
     header.join(","),
@@ -44,12 +62,26 @@ export async function GET(
         r.invited,
         r.sent,
         r.opened,
-        r.sent > 0 ? Math.round((r.opened / r.sent) * 100) : 0,
+        pctCell(r.openRate),
         r.yes,
         r.no,
         r.maybe,
         r.waitlisted,
-        r.invited > 0 ? Math.round((r.yes / r.invited) * 100) : 0,
+        pctCell(r.rsvpConversion),
+        r.checkedIn,
+        pctCell(r.checkInRate),
+        r.pollCount,
+        r.pollVotes,
+        r.pollVoters,
+        pctCell(r.pollParticipation),
+        r.questionsSubmitted,
+        r.questionsApproved,
+        r.questionsAnswered,
+        r.questionUpvotes,
+        r.surveyCount,
+        r.surveyResponses,
+        r.withEmail,
+        pctCell(r.surveyResponseRate),
       ].join(",")
     ),
   ];

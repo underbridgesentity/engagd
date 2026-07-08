@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { paymentProviderConfigs } from "@/db/schema";
 import { decryptSecret } from "@/lib/crypto";
 import { YocoAdapter } from "./yoco";
+import { PaystackAdapter } from "./paystack";
 import type { PaymentAdapter } from "./types";
 
 export type { PaymentAdapter, VerifyResult } from "./types";
@@ -39,8 +40,11 @@ export async function adapterForEvent(
     case "yoco":
       return new YocoAdapter({ publicKey: config.publicKey, secretKey });
     case "paystack":
-      // Phase 3: Paystack subaccount adapter.
-      throw new Error("Paystack support arrives in a later phase");
+      return new PaystackAdapter({
+        publicKey: config.publicKey,
+        secretKey,
+        subaccountCode: config.subaccountCode,
+      });
     default:
       throw new Error(`Unknown payment provider: ${config.provider}`);
   }

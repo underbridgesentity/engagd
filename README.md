@@ -28,8 +28,8 @@ All-in-one event lifecycle and engagement platform: invitations and RSVPs, live 
 - Attendee identity is an opaque `qrToken` used in personal links (`/r/{token}`) and door QR codes. No PII in query strings.
 - Payment secrets are AES-256-GCM encrypted at rest (`src/lib/crypto.ts`), server-side only. Payments are verified server-side, never trusted from redirects.
 
-## Phases
+## Phases (all built)
 
-- Phase 1 (this build): full schema, tenancy, auth, entitlements, Module A (events, microsite, CSV import, invitations, reminders), reply-to verification, billing scaffolding, analytics skeleton.
-- Phase 2: live polls, Q&A, check-in scanner, ticketing and Yoco payments, custom sending domains.
-- Phase 3: surveys, mailers, photo delivery, full analytics, Paystack adapter.
+- Phase 1: full schema, tenancy, auth, entitlements, Module A (events, microsite, CSV import, invitations, reminders), reply-to verification, billing scaffolding, analytics skeleton.
+- Phase 2: live polls, Q&A, check-in scanner with event-scoped staff access, free and paid ticketing, Yoco adapter with server-side verification, custom sending domains.
+- Phase 3: surveys, post-event mailers, photo delivery via S3 signed URLs, full engagement analytics, Paystack adapter.

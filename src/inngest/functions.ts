@@ -1,6 +1,6 @@
-import { and, eq, inArray, isNotNull } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, notInArray } from "drizzle-orm";
 import { db } from "@/db";
-import { attendees, emailCampaigns, events, invitations } from "@/db/schema";
+import { attendees, checkIns, emailCampaigns, events, invitations } from "@/db/schema";
 import { orgReplyTo, sendEmail } from "@/lib/email";
 import { inngest } from "@/lib/jobs";
 
@@ -111,6 +111,34 @@ async function resolveAudience(eventId: string, audience: string): Promise<Atten
         .where(and(base, eq(attendees.rsvpStatus, "responded_maybe")));
     case "waitlisted":
       return db.select().from(attendees).where(and(base, eq(attendees.rsvpStatus, "waitlisted")));
+    case "checked_in": {
+      // Anyone with a check-in row for this event, regardless of RSVP state.
+      const checkedInIds = db
+        .select({ id: checkIns.attendeeId })
+        .from(checkIns)
+        .where(eq(checkIns.eventId, eventId));
+      return db
+        .select()
+        .from(attendees)
+        .where(and(base, inArray(attendees.id, checkedInIds)));
+    }
+    case "no_shows": {
+      // Said yes but never checked in.
+      const checkedInIds = db
+        .select({ id: checkIns.attendeeId })
+        .from(checkIns)
+        .where(eq(checkIns.eventId, eventId));
+      return db
+        .select()
+        .from(attendees)
+        .where(
+          and(
+            base,
+            eq(attendees.rsvpStatus, "responded_yes"),
+            notInArray(attendees.id, checkedInIds)
+          )
+        );
+    }
     default:
       return [];
   }

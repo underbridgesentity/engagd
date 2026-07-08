@@ -1,8 +1,9 @@
 import { notFound } from "next/navigation";
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
-import { eventProgramItems, ticketTypes } from "@/db/schema";
+import { eventProgramItems, photoGalleries, photos, ticketTypes } from "@/db/schema";
 import { issuedCountForType } from "@/lib/tickets";
+import { signedViewUrl, storageConfigured } from "@/lib/storage";
 import { getEventQuestions, getPublicEventBySlug } from "@/lib/rsvp";
 import {
   EventLogo,
@@ -46,6 +47,56 @@ export default async function EventMicrositePage({
       ),
     getEventQuestions(event.id),
   ]);
+
+  // Published photo galleries, shown for active and completed events. Signed
+  // view URLs are generated server-side in one pass and expire in an hour.
+  type PublicGallery = {
+    id: string;
+    title: string;
+    photos: Array<{ id: string; url: string; caption: string | null }>;
+  };
+  let publicGalleries: PublicGallery[] = [];
+  if (storageConfigured()) {
+    const galleries = await db
+      .select()
+      .from(photoGalleries)
+      .where(
+        and(
+          eq(photoGalleries.eventId, event.id),
+          eq(photoGalleries.published, true)
+        )
+      )
+      .orderBy(asc(photoGalleries.createdAt));
+    if (galleries.length > 0) {
+      const rows = await db
+        .select()
+        .from(photos)
+        .where(
+          inArray(
+            photos.galleryId,
+            galleries.map((g) => g.id)
+          )
+        )
+        .orderBy(asc(photos.sortOrder), asc(photos.createdAt));
+      const signed = await Promise.all(
+        rows.map(async (p) => ({
+          id: p.id,
+          galleryId: p.galleryId,
+          caption: p.caption,
+          url: await signedViewUrl(p.storageKey, 3600),
+        }))
+      );
+      publicGalleries = galleries
+        .map((g) => ({
+          id: g.id,
+          title: g.title,
+          photos: signed
+            .filter((p) => p.galleryId === g.id)
+            .map(({ id, url, caption }) => ({ id, url, caption })),
+        }))
+        .filter((g) => g.photos.length > 0);
+    }
+  }
 
   const rsvpAction = submitPublicRsvp.bind(null, event.slug);
   const isCompleted = event.status === "completed";
@@ -122,6 +173,50 @@ export default async function EventMicrositePage({
       ) : null}
 
       <ProgramTimeline items={program} timezone={event.timezone} />
+
+      {publicGalleries.length > 0 ? (
+        <section aria-labelledby="photos-heading" className="mt-10">
+          <h2 id="photos-heading" className="font-display text-xl text-fg">
+            Photos
+          </h2>
+          <div className="mt-4 space-y-8">
+            {publicGalleries.map((gallery) => (
+              <div key={gallery.id}>
+                {publicGalleries.length > 1 ? (
+                  <h3 className="mb-3 text-sm font-medium text-fg-dim">
+                    {gallery.title}
+                  </h3>
+                ) : null}
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {gallery.photos.map((photo) => (
+                    <a
+                      key={photo.id}
+                      href={photo.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group block overflow-hidden rounded-[10px] border border-line"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={photo.url}
+                        alt={photo.caption ?? ""}
+                        loading="lazy"
+                        decoding="async"
+                        className="aspect-square w-full object-cover transition-transform duration-200 group-hover:scale-[1.03]"
+                      />
+                      {photo.caption ? (
+                        <span className="block truncate bg-raised px-2 py-1.5 text-xs text-fg-dim">
+                          {photo.caption}
+                        </span>
+                      ) : null}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <section aria-labelledby="rsvp-heading" className="mt-10">
         {isCompleted ? (

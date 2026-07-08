@@ -12,7 +12,15 @@ import { requireOrg, requireOrgEvent } from "@/lib/tenancy";
 const composeSchema = z.object({
   subject: z.string().trim().min(1, "Subject is required").max(300),
   intro: z.string().trim().min(1, "Write a short message for your guests").max(10000),
-  audience: z.enum(["all", "non_responders", "attending", "maybe", "waitlisted"]),
+  audience: z.enum([
+    "all",
+    "non_responders",
+    "attending",
+    "maybe",
+    "waitlisted",
+    "checked_in",
+    "no_shows",
+  ]),
   sendMode: z.enum(["now", "schedule"]),
   scheduledAt: z.string().optional().default(""),
 });
