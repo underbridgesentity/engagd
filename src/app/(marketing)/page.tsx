@@ -101,20 +101,20 @@ export default function HomePage() {
       {/* Hero: the photograph is the background, gently parallaxed. */}
       <section className="relative isolate -mt-20 flex min-h-[78vh] flex-col justify-center overflow-hidden md:-mt-24">
         <div className="absolute inset-0 -z-10 overflow-hidden">
-          <Parallax speed={0.18} className="absolute inset-[-12%]">
+          <Parallax speed={0.08} className="absolute inset-[-8%]">
             <Image
               src="/img/hero.jpg"
               alt=""
               fill
               priority
               sizes="100vw"
-              className="object-cover object-center"
+              className="object-cover object-[78%_22%]"
             />
           </Parallax>
         </div>
         <div
           aria-hidden
-          className="absolute inset-0 -z-10 bg-gradient-to-r from-ink via-ink/85 to-ink/30"
+          className="absolute inset-0 -z-10 bg-gradient-to-r from-ink via-ink/80 to-ink/20"
         />
         <div
           aria-hidden
