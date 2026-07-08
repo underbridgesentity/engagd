@@ -185,7 +185,7 @@ export default function LandingPage() {
                   ))}
                 </ul>
                 <Link
-                  href="/login"
+                  href={tier === "enterprise" ? "/contact" : "/login"}
                   className={`mt-6 rounded-lg px-4 py-2 text-center text-sm font-medium transition-colors ${
                     highlight
                       ? "bg-signal text-ink hover:bg-signal-strong"

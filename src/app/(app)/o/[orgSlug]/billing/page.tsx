@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { and, count, eq } from "drizzle-orm";
+import { and, count, desc, eq } from "drizzle-orm";
 import { db } from "@/db";
-import { events, memberships } from "@/db/schema";
+import { events, memberships, subscriptionPayments } from "@/db/schema";
 import { requireOrg } from "@/lib/tenancy";
 import { getEntitlements, PLANS } from "@/lib/entitlements";
 import { Badge, Button, Card } from "@/components/ui";
@@ -48,23 +48,51 @@ const ERROR_COPY: Record<string, string> = {
   "invalid-plan": "That plan selection was not valid. Pick a plan below.",
   "enterprise-contact":
     "Enterprise is set up by our team. Email hello@engagd.co.za and we will get you sorted.",
+  "payments-not-configured":
+    "Payments are not configured yet. Plan changes that need payment are unavailable until they are.",
+  "downgrade-blocked":
+    "You are over the limits of that plan, so we cannot downgrade you yet.",
 };
+
+const STATUS_BADGE: Record<
+  string,
+  { tone: "neutral" | "signal" | "mint" | "ember" | "coral"; label: string }
+> = {
+  created: { tone: "neutral", label: "Created" },
+  pending: { tone: "ember", label: "Pending" },
+  succeeded: { tone: "mint", label: "Succeeded" },
+  failed: { tone: "coral", label: "Failed" },
+  refunded: { tone: "neutral", label: "Refunded" },
+};
+
+function formatDate(d: Date): string {
+  return d.toLocaleDateString("en-ZA", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
 
 export default async function BillingPage({
   params,
   searchParams,
 }: {
   params: Promise<{ orgSlug: string }>;
-  searchParams: Promise<{ error?: string; ok?: string; interval?: string }>;
+  searchParams: Promise<{
+    error?: string;
+    ok?: string;
+    interval?: string;
+    detail?: string;
+  }>;
 }) {
   const { orgSlug } = await params;
-  const { error, ok, interval } = await searchParams;
+  const { error, ok, interval, detail } = await searchParams;
   const ctx = await requireOrg(orgSlug, "owner");
   const showAnnual = interval
     ? interval === "annual"
     : ctx.organisation.billingInterval === "annual";
 
-  const [ent, [activeRow], [seatRow]] = await Promise.all([
+  const [ent, [activeRow], [seatRow], history] = await Promise.all([
     getEntitlements(ctx.organisationId),
     db
       .select({ n: count() })
@@ -79,9 +107,17 @@ export default async function BillingPage({
       .select({ n: count() })
       .from(memberships)
       .where(eq(memberships.organisationId, ctx.organisationId)),
+    db
+      .select()
+      .from(subscriptionPayments)
+      .where(eq(subscriptionPayments.organisationId, ctx.organisationId))
+      .orderBy(desc(subscriptionPayments.createdAt))
+      .limit(20),
   ]);
 
   const currentPlan = PLANS[ctx.organisation.planTier];
+  const periodEndsAt =
+    history.find((p) => p.status === "succeeded")?.periodEndsAt ?? null;
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -91,9 +127,10 @@ export default async function BillingPage({
       </p>
 
       {error ? (
-        <p role="alert" className="mt-4 rounded-lg border border-coral/40 bg-coral/10 px-3 py-2 text-sm text-coral">
-          {ERROR_COPY[error] ?? "Something went wrong. Try again."}
-        </p>
+        <div role="alert" className="mt-4 rounded-lg border border-coral/40 bg-coral/10 px-3 py-2 text-sm text-coral">
+          <p>{ERROR_COPY[error] ?? "Something went wrong. Try again."}</p>
+          {error === "downgrade-blocked" && detail ? <p className="mt-1">{detail}</p> : null}
+        </div>
       ) : null}
       {ok === "plan-changed" ? (
         <p role="status" className="mt-4 rounded-lg border border-mint/40 bg-mint/10 px-3 py-2 text-sm text-mint">
@@ -112,7 +149,14 @@ export default async function BillingPage({
             <p className="text-xs uppercase tracking-wider text-fg-faint">Current plan</p>
             <p className="mt-1 font-display text-2xl text-fg">{currentPlan.name}</p>
           </div>
-          <Badge tone="signal">{ctx.organisation.billingInterval}</Badge>
+          <div className="flex flex-col items-end gap-1">
+            <Badge tone="signal">{ctx.organisation.billingInterval}</Badge>
+            {periodEndsAt ? (
+              <span className="font-data text-xs text-fg-faint">
+                Paid through {formatDate(periodEndsAt)}
+              </span>
+            ) : null}
+          </div>
         </div>
         <div className="mt-6 grid gap-5 sm:grid-cols-2">
           <UsageBar
@@ -150,9 +194,8 @@ export default async function BillingPage({
         </div>
       </div>
       <p className="mt-2 font-data text-xs text-fg-faint">
-        Annual billing: pay for 10 months, get 12. Payment collection is not
-        wired up yet, so plan changes apply immediately without charge while we
-        finish that.
+        Annual billing: pay for 10 months, get 12. Paid plan changes go through
+        a secure Paystack checkout and apply as soon as payment is confirmed.
       </p>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -203,7 +246,7 @@ export default async function BillingPage({
               </ul>
               {tier === "enterprise" ? (
                 <a
-                  href="mailto:hello@engagd.co.za"
+                  href="/contact"
                   className="mt-4 block rounded-lg border border-line-strong px-3 py-1.5 text-center text-sm text-fg hover:border-signal/60"
                 >
                   Contact us
@@ -229,6 +272,51 @@ export default async function BillingPage({
           );
         })}
       </div>
+
+      <h2 className="mt-10 font-display text-lg text-fg">Billing history</h2>
+      {history.length === 0 ? (
+        <p className="mt-3 text-sm text-fg-dim">
+          No subscription payments yet. Upgrading to a paid plan will show
+          payments here.
+        </p>
+      ) : (
+        <Card className="mt-4 overflow-x-auto p-0">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-line text-left text-xs uppercase tracking-wider text-fg-faint">
+                <th className="px-4 py-3 font-normal">Date</th>
+                <th className="px-4 py-3 font-normal">Plan</th>
+                <th className="px-4 py-3 font-normal">Interval</th>
+                <th className="px-4 py-3 font-normal">Amount</th>
+                <th className="px-4 py-3 font-normal">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {history.map((p) => {
+                const badge = STATUS_BADGE[p.status] ?? {
+                  tone: "neutral" as const,
+                  label: p.status,
+                };
+                return (
+                  <tr key={p.id} className="border-b border-line last:border-0">
+                    <td className="px-4 py-3 font-data text-xs text-fg-dim">
+                      {formatDate(p.createdAt)}
+                    </td>
+                    <td className="px-4 py-3 text-fg">{PLANS[p.planTier].name}</td>
+                    <td className="px-4 py-3 text-fg-dim">{p.billingInterval}</td>
+                    <td className="px-4 py-3 font-data text-fg">
+                      {rands(p.amountCents)}
+                    </td>
+                    <td className="px-4 py-3">
+                      <Badge tone={badge.tone}>{badge.label}</Badge>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </Card>
+      )}
     </div>
   );
 }

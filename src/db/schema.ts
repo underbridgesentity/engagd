@@ -184,6 +184,56 @@ export const memberships = pgTable(
   ]
 );
 
+// Pending invitations to join an organisation as a seat-consuming member.
+export const orgInvites = pgTable(
+  "org_invites",
+  {
+    id: id(),
+    organisationId: text("organisation_id")
+      .notNull()
+      .references(() => organisations.id, { onDelete: "cascade" }),
+    email: text("email").notNull(),
+    role: membershipRole("role").notNull().default("viewer"),
+    token: text("token")
+      .notNull()
+      .unique()
+      .$defaultFn(() => createId()),
+    invitedByUserId: text("invited_by_user_id").references(() => users.id),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    acceptedAt: timestamp("accepted_at", { withTimezone: true }),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    uniqueIndex("org_invites_org_email_idx").on(t.organisationId, t.email),
+  ]
+);
+
+// Engagd's own subscription revenue: plan payments by organisations.
+// Distinct from `payments`, which is organiser ticket money.
+export const subscriptionPayments = pgTable(
+  "subscription_payments",
+  {
+    id: id(),
+    organisationId: text("organisation_id")
+      .notNull()
+      .references(() => organisations.id, { onDelete: "cascade" }),
+    planTier: planTier("plan_tier").notNull(),
+    billingInterval: billingInterval("billing_interval").notNull(),
+    provider: paymentProvider("provider").notNull(),
+    providerReference: text("provider_reference"),
+    amountCents: integer("amount_cents").notNull(),
+    currency: text("currency").notNull().default("ZAR"),
+    status: paymentStatus("status").notNull().default("created"),
+    verificationResult: jsonb("verification_result"),
+    verifiedAt: timestamp("verified_at", { withTimezone: true }),
+    // Paid-through date this payment extends the subscription to.
+    periodEndsAt: timestamp("period_ends_at", { withTimezone: true }),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [index("subscription_payments_org_idx").on(t.organisationId)]
+);
+
 // Check-in staff are event-scoped door access, not seat-consuming members.
 export const checkInStaffAccess = pgTable(
   "check_in_staff_access",
