@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Eyebrow } from "@/components/marketing";
+import { Reveal } from "@/components/motion";
 
 export const metadata = { title: "How it works" };
 
@@ -71,7 +72,7 @@ export default function HowItWorksPage() {
   return (
     <>
       {/* Full-bleed hero over a photograph. */}
-      <section className="relative isolate overflow-hidden">
+      <section className="relative isolate -mt-20 overflow-hidden md:-mt-24">
         <Image
           src="/img/microsite-fallback.jpg"
           alt=""
@@ -84,7 +85,7 @@ export default function HowItWorksPage() {
           aria-hidden
           className="absolute inset-0 -z-10 bg-gradient-to-r from-ink via-ink/85 to-ink/50"
         />
-        <div className="mx-auto max-w-6xl px-6 py-28 lg:py-36">
+        <div className="mx-auto max-w-6xl px-6 pt-40 pb-28 lg:pt-48 lg:pb-36">
           <Eyebrow>How it works</Eyebrow>
           <h1 className="display-tight mt-6 max-w-3xl text-5xl text-fg sm:text-6xl lg:text-7xl">
             From the first invite to the final thank you.
@@ -109,8 +110,10 @@ export default function HowItWorksPage() {
           className={i % 2 === 1 ? "bg-ink-2 border-y border-line" : ""}
         >
           <div className="mx-auto grid max-w-6xl items-center gap-12 px-6 py-20 lg:grid-cols-2 lg:py-28">
-            <div className={i % 2 === 1 ? "lg:order-2" : ""}>
-              <span className={`font-data text-sm font-medium ${m.accent}`}>
+            <Reveal className={i % 2 === 1 ? "lg:order-2" : ""}>
+              <span
+                className={`text-sm font-bold uppercase tracking-widest ${m.accent}`}
+              >
                 {m.n} / {m.tag}
               </span>
               <h2 className="mt-4 text-balance text-4xl text-fg sm:text-5xl">
@@ -125,7 +128,7 @@ export default function HowItWorksPage() {
                   </li>
                 ))}
               </ul>
-            </div>
+            </Reveal>
             <div
               className={`relative aspect-[4/3] overflow-hidden rounded-3xl border border-line ${
                 i % 2 === 1 ? "lg:order-1" : ""

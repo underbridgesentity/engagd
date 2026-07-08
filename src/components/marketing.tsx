@@ -1,48 +1,5 @@
 import Link from "next/link";
-import { Logo, Wordmark } from "@/components/logo";
-
-const NAV_LINKS = [
-  { href: "/how-it-works", label: "How it works" },
-  { href: "/pricing", label: "Pricing" },
-  { href: "/contact", label: "Contact" },
-];
-
-export function MarketingNav() {
-  return (
-    <header className="sticky top-0 z-50 border-b border-line/70 bg-ink/80 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-        <Link href="/" className="text-xl" aria-label="Engagd home">
-          <Wordmark />
-        </Link>
-        <nav className="hidden items-center gap-8 md:flex">
-          {NAV_LINKS.map((l) => (
-            <Link
-              key={l.href}
-              href={l.href}
-              className="text-sm font-medium text-fg-dim transition-colors hover:text-fg"
-            >
-              {l.label}
-            </Link>
-          ))}
-        </nav>
-        <div className="flex items-center gap-2">
-          <Link
-            href="/login"
-            className="hidden rounded-full px-4 py-2 text-sm font-semibold text-fg-dim transition-colors hover:text-fg sm:block"
-          >
-            Sign in
-          </Link>
-          <Link
-            href="/login"
-            className="rounded-full bg-signal px-5 py-2 text-sm font-bold text-ink transition-transform hover:-translate-y-0.5 hover:bg-signal-strong"
-          >
-            Get started
-          </Link>
-        </div>
-      </div>
-    </header>
-  );
-}
+import { Logo } from "@/components/logo";
 
 const FOOTER_COLUMNS = [
   {
@@ -111,10 +68,12 @@ export function MarketingFooter() {
   );
 }
 
-// Shared section eyebrow used across marketing pages.
+// Shared section eyebrow: a small orange label with a leading rule, set in
+// the body face rather than a monospace to avoid the generic tech look.
 export function Eyebrow({ children }: { children: React.ReactNode }) {
   return (
-    <p className="font-data text-xs font-medium uppercase tracking-[0.3em] text-signal">
+    <p className="flex items-center gap-3 text-xs font-bold uppercase tracking-[0.2em] text-signal">
+      <span className="h-px w-8 bg-signal/60" />
       {children}
     </p>
   );

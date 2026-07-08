@@ -35,40 +35,40 @@
   --color-ember: var(--ember);
   --color-mint: var(--mint);
   --color-coral: var(--coral);
-  /* Inter carries display and body; data stays monospace for small labels. */
-  --font-display: var(--font-sans);
-  --font-body: var(--font-sans);
+  /* Fraunces display, Hanken Grotesk body, mono only for in-app data. */
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
   --font-data: var(--font-data);
 }
 
 html {
   color-scheme: dark;
+  scroll-behavior: smooth;
 }
 
 body {
   background: var(--ink);
   color: var(--text);
-  font-family: var(--font-sans), sans-serif;
+  font-family: var(--font-body), sans-serif;
   -webkit-font-smoothing: antialiased;
-  font-feature-settings: "cv05" 1, "ss01" 1;
 }
 
-/* Headings are heavy and tightly tracked so Inter reads bold, not default. */
+/* Headings use Fraunces, heavy and tightly set for a bold editorial voice. */
 h1,
 h2,
 h3,
 h4 {
-  font-family: var(--font-sans), sans-serif;
-  font-weight: 800;
-  letter-spacing: -0.035em;
-  line-height: 1.03;
+  font-family: var(--font-display), serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.04;
 }
 
-/* Oversized display headings get even tighter tracking. */
 .display-tight {
-  font-weight: 800;
-  letter-spacing: -0.045em;
-  line-height: 0.98;
+  font-family: var(--font-display), serif;
+  font-weight: 900;
+  letter-spacing: -0.025em;
+  line-height: 0.96;
 }
 
 .text-balance {
@@ -81,7 +81,45 @@ h4 {
   border-radius: 4px;
 }
 
+::selection {
+  background: color-mix(in srgb, var(--signal) 40%, transparent);
+}
+
+/* Scroll-reveal: elements start lowered and faded, then settle when the
+   observer marks them visible. No-JS and reduced-motion fall back to shown. */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity 0.7s ease,
+    transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Marquee for the moving event-type ticker. */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.marquee-track {
+  animation: marquee 32s linear infinite;
+}
+.marquee:hover .marquee-track {
+  animation-play-state: paused;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
   *,
   *::before,
   *::after {
@@ -89,8 +127,8 @@ h4 {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-}
-
-::selection {
-  background: color-mix(in srgb, var(--signal) 40%, transparent);
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
 }

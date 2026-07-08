@@ -1,4 +1,5 @@
-import { MarketingNav, MarketingFooter } from "@/components/marketing";
+import { SiteHeader } from "@/components/site-header";
+import { MarketingFooter } from "@/components/marketing";
 
 export default function MarketingLayout({
   children,
@@ -7,8 +8,10 @@ export default function MarketingLayout({
 }) {
   return (
     <div className="min-h-screen bg-ink">
-      <MarketingNav />
-      <main>{children}</main>
+      <SiteHeader />
+      {/* Clearance for the fixed header. Full-bleed hero sections pull back
+          up with a negative top margin so the photograph reaches the top. */}
+      <main className="pt-20 md:pt-24">{children}</main>
       <MarketingFooter />
     </div>
   );

@@ -116,7 +116,7 @@ export default function PrivacyPage() {
           items={[
             "Resend, for sending transactional and event email.",
             "Yoco and Paystack, as payment providers where organisers enable ticketing.",
-            "Amazon Web Services (AWS), for hosting and storage in the af-south-1 (Cape Town) region.",
+            "Amazon Web Services (AWS), for hosting and storage in the Cape Town region.",
             "Realtime messaging and background job providers that power live features and scheduled sends.",
           ]}
         />
@@ -130,7 +130,7 @@ export default function PrivacyPage() {
 
       <PolicySection heading="Where your data is stored">
         <PolicyParagraph>
-          Our primary infrastructure is hosted with AWS in the af-south-1 region
+          Our primary infrastructure is hosted with AWS in the Cape Town region
           in Cape Town, South Africa, so your data stays in South Africa by
           default. Some sub-processors, such as email delivery, may process
           limited data outside South Africa in order to provide their service.
