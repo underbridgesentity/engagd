@@ -55,6 +55,15 @@ export function rate(part: number, whole: number): number | null {
   return whole > 0 ? part / whole : null;
 }
 
+// Participation rates whose numerator can legitimately exceed the intended
+// denominator (walk-ins beyond RSVP-yes, online voters beyond the door count).
+// Using max(part, whole) as the denominator keeps the rate honest and inside
+// 0 to 100 percent instead of reading 300 percent. Raw counts are shown too.
+export function boundedRate(part: number, whole: number): number | null {
+  const denom = Math.max(part, whole);
+  return denom > 0 ? part / denom : null;
+}
+
 // Per-event funnel counts for one organisation. Distinct counts guard against
 // the row multiplication from the double left join.
 export async function orgAnalytics(
@@ -207,10 +216,11 @@ function withRates(
     ...engagement,
     openRate: rate(funnel.opened, funnel.sent),
     rsvpConversion: rate(funnel.yes, funnel.invited),
-    // Checked in over confirmed yes RSVPs.
-    checkInRate: rate(engagement.checkedIn, funnel.yes),
-    // Distinct poll voters over checked-in attendees.
-    pollParticipation: rate(engagement.pollVoters, engagement.checkedIn),
+    // Checked in over confirmed yes RSVPs, bounded so a room of walk-ins
+    // reads 100 percent rather than overshooting.
+    checkInRate: boundedRate(engagement.checkedIn, funnel.yes),
+    // Distinct poll voters over checked-in attendees, bounded for online voters.
+    pollParticipation: boundedRate(engagement.pollVoters, engagement.checkedIn),
     // Survey responses over attendees reachable by email.
     surveyResponseRate: rate(engagement.surveyResponses, funnel.withEmail),
   };

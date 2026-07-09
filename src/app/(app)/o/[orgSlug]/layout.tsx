@@ -3,16 +3,8 @@ import { auth } from "@/auth";
 import { requireOrg } from "@/lib/tenancy";
 import { Badge } from "@/components/ui";
 import { Logo } from "@/components/logo";
+import { OrgNav } from "./_components/org-nav";
 import { signOutAction } from "./actions";
-
-const NAV = [
-  { label: "Dashboard", path: "" },
-  { label: "Events", path: "/events" },
-  { label: "Analytics", path: "/analytics" },
-  { label: "Team", path: "/team" },
-  { label: "Billing", path: "/billing" },
-  { label: "Settings", path: "/settings" },
-];
 
 export default async function OrgLayout({
   children,
@@ -48,17 +40,7 @@ export default async function OrgLayout({
           </p>
           <p className="truncate font-data text-xs text-fg-faint">{email}</p>
         </div>
-        <nav className="flex gap-1 overflow-x-auto px-3 pb-3 md:flex-col md:pb-0">
-          {NAV.map((item) => (
-            <Link
-              key={item.label}
-              href={`/o/${orgSlug}${item.path}`}
-              className="whitespace-nowrap rounded-lg px-3 py-2 text-sm text-fg-dim transition-colors hover:bg-raised-2 hover:text-fg"
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
+        <OrgNav orgSlug={orgSlug} />
         <div className="mt-auto hidden px-5 py-5 md:block">
           <form action={signOutAction}>
             <button

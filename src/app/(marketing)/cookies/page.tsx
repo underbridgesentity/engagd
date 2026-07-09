@@ -42,9 +42,25 @@ const COOKIES = [
   },
 ];
 
+// TOC entries. Each must match a PolicySection heading below exactly so the
+// derived anchor ids line up.
+const SECTIONS = [
+  "What cookies are",
+  "The categories we use",
+  "Attendee-facing surfaces are kept minimal",
+  "Example cookies",
+  "How to control cookies",
+  "Third-party cookies",
+  "Changes to this policy",
+];
+
 export default function CookiesPage() {
   return (
-    <PolicyShell title="Cookie Policy" updated="9 July 2026">
+    <PolicyShell
+      title="Cookie Policy"
+      updated="9 July 2026"
+      sections={SECTIONS}
+    >
       <PolicyTemplateNote />
 
       <PolicySection heading="What cookies are">

@@ -9,7 +9,9 @@ export const metadata = {
 };
 
 // Case-insensitive lookup of a short join code, limited to publicly
-// visible events. The code itself is never placed in a query string.
+// visible events. On a miss the entered code is passed back via the
+// redirect so the attendee does not have to retype it (it is a short
+// event code, not personal data).
 async function joinEvent(formData: FormData) {
   "use server";
   const code = String(formData.get("code") ?? "")
@@ -28,15 +30,15 @@ async function joinEvent(formData: FormData) {
       .limit(1);
     if (event) redirect(`/e/${event.slug}`);
   }
-  redirect("/join?notfound=1");
+  redirect(`/join?notfound=1&code=${encodeURIComponent(code)}`);
 }
 
 export default async function JoinPage({
   searchParams,
 }: {
-  searchParams: Promise<{ notfound?: string }>;
+  searchParams: Promise<{ notfound?: string; code?: string }>;
 }) {
-  const { notfound } = await searchParams;
+  const { notfound, code } = await searchParams;
 
   return (
     <div className="flex min-h-dvh flex-col bg-ink text-fg">
@@ -56,6 +58,7 @@ export default async function JoinPage({
               name="code"
               type="text"
               required
+              defaultValue={code ?? ""}
               autoFocus
               autoComplete="off"
               autoCapitalize="characters"

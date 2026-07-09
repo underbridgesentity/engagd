@@ -1,4 +1,5 @@
 import { asc, eq } from "drizzle-orm";
+import { buttonClasses } from "@/components/ui";
 import { db } from "@/db";
 import { attendees, events, surveyQuestions, surveys } from "@/db/schema";
 import { EventLogo, FriendlyNotFound, MicrositeShell } from "../../e/microsite";
@@ -42,6 +43,16 @@ export async function PublicSurveyPage({
             Thanks for your interest in sharing feedback on {event.name}. This
             survey is no longer accepting responses.
           </p>
+          <a
+            href={`/e/${event.slug}`}
+            className={buttonClasses({
+              variant: "secondary",
+              size: "lg",
+              className: "mt-6 min-h-11",
+            })}
+          >
+            Back to the event
+          </a>
         </div>
       </MicrositeShell>
     );
@@ -94,6 +105,7 @@ export async function PublicSurveyPage({
             action={submitSurveyResponse.bind(null, survey.id, token)}
             questions={publicQuestions}
             personalised={Boolean(token)}
+            eventSlug={event.slug}
           />
         </div>
       </div>

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Button, Input, Label, Select, Textarea } from "@/components/ui";
+import { Button, Field, Input, Select, Textarea } from "@/components/ui";
 import { Eyebrow } from "@/components/marketing";
 import { submitEnterpriseContact } from "./actions";
 
@@ -12,6 +12,10 @@ const ERROR_COPY: Record<string, string> = {
   message: "Add a short message, at least a sentence, so we can prepare.",
   form: "Something in the form did not look right. Check the fields and try again.",
 };
+
+// Errors named after a field render inline under that field via Field;
+// anything else falls back to the alert at the top of the form.
+const FIELD_KEYS = ["name", "email", "organisation", "volume", "message"];
 
 export default async function ContactPage({
   searchParams,
@@ -32,8 +36,8 @@ export default async function ContactPage({
           human who answers. Tell us what you are planning and we will get back
           to you within one working day.
         </p>
-        <div className="relative mt-10 hidden overflow-hidden rounded-3xl border border-line lg:block">
-          <div className="relative aspect-[4/3]">
+        <div className="relative mt-8 overflow-hidden rounded-3xl border border-line lg:mt-10">
+          <div className="relative aspect-[16/9] lg:aspect-[4/3]">
             <Image
               src="/img/contact.jpg"
               alt="An engaged audience at a conference"
@@ -70,7 +74,7 @@ export default async function ContactPage({
           </div>
         ) : (
           <div className="rounded-3xl border border-line bg-raised p-8">
-            {error ? (
+            {error && !FIELD_KEYS.includes(error) ? (
               <p
                 role="alert"
                 className="mb-6 rounded-lg border border-coral/40 bg-coral/10 px-3 py-2 text-sm text-coral"
@@ -79,37 +83,44 @@ export default async function ContactPage({
               </p>
             ) : null}
             <form action={submitEnterpriseContact} className="flex flex-col gap-5">
-              <div>
-                <Label htmlFor="contact-name">Your name</Label>
+              <Field
+                id="contact-name"
+                label="Your name"
+                error={error === "name" ? ERROR_COPY.name : undefined}
+              >
+                <Input name="name" required placeholder="Naledi Dlamini" />
+              </Field>
+              <Field
+                id="contact-email"
+                label="Work email"
+                error={error === "email" ? ERROR_COPY.email : undefined}
+              >
                 <Input
-                  id="contact-name"
-                  name="name"
-                  required
-                  placeholder="Naledi Dlamini"
-                />
-              </div>
-              <div>
-                <Label htmlFor="contact-email">Work email</Label>
-                <Input
-                  id="contact-email"
                   name="email"
                   type="email"
                   required
                   placeholder="naledi@company.co.za"
                 />
-              </div>
-              <div>
-                <Label htmlFor="contact-org">Organisation</Label>
+              </Field>
+              <Field
+                id="contact-org"
+                label="Organisation"
+                error={
+                  error === "organisation" ? ERROR_COPY.organisation : undefined
+                }
+              >
                 <Input
-                  id="contact-org"
                   name="organisation"
                   required
                   placeholder="Company or venue name"
                 />
-              </div>
-              <div>
-                <Label htmlFor="contact-volume">Expected attendee volume</Label>
-                <Select id="contact-volume" name="volume" required defaultValue="">
+              </Field>
+              <Field
+                id="contact-volume"
+                label="Expected attendee volume"
+                error={error === "volume" ? ERROR_COPY.volume : undefined}
+              >
+                <Select name="volume" required defaultValue="">
                   <option value="" disabled>
                     Pick a range
                   </option>
@@ -118,18 +129,20 @@ export default async function ContactPage({
                   <option value="2000-10000">2,000 to 10,000 per event</option>
                   <option value="10000-plus">More than 10,000 per event</option>
                 </Select>
-              </div>
-              <div>
-                <Label htmlFor="contact-message">What are you planning?</Label>
+              </Field>
+              <Field
+                id="contact-message"
+                label="What are you planning?"
+                error={error === "message" ? ERROR_COPY.message : undefined}
+              >
                 <Textarea
-                  id="contact-message"
                   name="message"
                   required
                   rows={5}
                   placeholder="Conferences, AGMs, a festival series? Tell us about your events, timelines, and anything unusual."
                 />
-              </div>
-              <Button type="submit" className="self-start rounded-full px-6 py-3">
+              </Field>
+              <Button type="submit" pill size="lg" className="self-start">
                 Send message
               </Button>
             </form>

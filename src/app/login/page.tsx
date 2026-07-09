@@ -32,9 +32,12 @@ export default async function LoginPage({
           <Logo className="h-6 w-auto" />
           <span className="font-display text-xl leading-none text-signal">.</span>
         </Link>
-        <h1 className="mt-8 font-display text-2xl text-fg">Sign in</h1>
+        <h1 className="mt-8 font-display text-2xl text-fg">
+          Create your account
+        </h1>
         <p className="mt-2 text-sm text-fg-dim">
-          We will email you a magic link. No passwords to remember.
+          Free to start, no card needed. Already have an account? Sign in with
+          the same email, it is the same magic link.
         </p>
 
         {error ? (

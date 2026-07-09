@@ -138,9 +138,10 @@ export default async function OrgDashboardPage({
       ) : (
         <Card className="mt-4 divide-y divide-line p-0">
           {recentEvents.map((e) => (
-            <div
+            <Link
               key={e.id}
-              className="flex flex-wrap items-center justify-between gap-3 px-5 py-4"
+              href={`/o/${orgSlug}/events/${e.id}`}
+              className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 transition-colors hover:bg-raised-2"
             >
               <div className="min-w-0">
                 <p className="truncate font-medium text-fg">{e.name}</p>
@@ -157,7 +158,7 @@ export default async function OrgDashboardPage({
                 </p>
               </div>
               <Badge tone={STATUS_TONE[e.status]}>{e.status}</Badge>
-            </div>
+            </Link>
           ))}
         </Card>
       )}

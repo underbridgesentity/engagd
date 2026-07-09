@@ -2,6 +2,8 @@
 
 import * as React from "react";
 import { useActionState, useState } from "react";
+import { Icon } from "@/components/icon";
+import { buttonClasses } from "@/components/ui";
 import type {
   CustomAnswerValue,
   PublicQuestion,
@@ -76,6 +78,7 @@ function TextField({
         id={name}
         name={name}
         type={type}
+        required={required}
         defaultValue={defaultValue}
         autoComplete={autoComplete}
         inputMode={inputMode}
@@ -116,6 +119,7 @@ function CustomQuestionField({
             id={name}
             name={name}
             rows={3}
+            required={question.required}
             defaultValue={typeof defaultValue === "string" ? defaultValue : ""}
             aria-invalid={error ? true : undefined}
             aria-describedby={error ? errorId : undefined}
@@ -134,6 +138,7 @@ function CustomQuestionField({
           <select
             id={name}
             name={name}
+            required={question.required}
             defaultValue={typeof defaultValue === "string" ? defaultValue : ""}
             aria-invalid={error ? true : undefined}
             aria-describedby={error ? errorId : undefined}
@@ -185,6 +190,7 @@ function CustomQuestionField({
             <input
               type="checkbox"
               name={name}
+              required={question.required}
               defaultChecked={defaultValue === true}
               aria-describedby={error ? errorId : undefined}
               className="h-4 w-4 accent-[var(--signal)]"
@@ -209,6 +215,7 @@ function CustomQuestionField({
             name={name}
             type="number"
             inputMode="numeric"
+            required={question.required}
             defaultValue={
               typeof defaultValue === "number" ? String(defaultValue) : ""
             }
@@ -230,6 +237,7 @@ function CustomQuestionField({
             id={name}
             name={name}
             type="date"
+            required={question.required}
             defaultValue={typeof defaultValue === "string" ? defaultValue : ""}
             aria-invalid={error ? true : undefined}
             aria-describedby={error ? errorId : undefined}
@@ -249,6 +257,7 @@ function CustomQuestionField({
             id={name}
             name={name}
             type="text"
+            required={question.required}
             defaultValue={typeof defaultValue === "string" ? defaultValue : ""}
             aria-invalid={error ? true : undefined}
             aria-describedby={error ? errorId : undefined}
@@ -303,6 +312,37 @@ function PlusOnesStepper({
       </div>
       <FieldError id="plusOnes-error" message={error} />
     </div>
+  );
+}
+
+// Copies the absolute personal link and swaps to a "Copied" state briefly
+// so the attendee gets feedback without a raw URL on screen.
+function CopyLinkButton({ path }: { path: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      type="button"
+      onClick={async () => {
+        try {
+          await navigator.clipboard.writeText(
+            new URL(path, window.location.origin).toString()
+          );
+          setCopied(true);
+          window.setTimeout(() => setCopied(false), 2000);
+        } catch {
+          // Clipboard unavailable (permissions, insecure context); the
+          // entry pass button above still gets them to the same page.
+        }
+      }}
+      className={buttonClasses({
+        variant: "secondary",
+        size: "lg",
+        className: "mt-2 min-h-11 w-full",
+      })}
+    >
+      <Icon name={copied ? "check" : "copy"} />
+      {copied ? "Copied" : "Copy link"}
+    </button>
   );
 }
 
@@ -363,11 +403,11 @@ export function RsvpForm({
         className="rounded-[10px] border border-mint/30 bg-mint/10 p-5 text-center"
       >
         <p className="font-display text-xl text-fg">
-          {variant === "public" ? "RSVP received" : "RSVP updated"}
+          {variant === "public" ? "You are on the list" : "RSVP updated"}
         </p>
         <p className="mt-2 text-sm text-fg-dim">
           {variant === "public"
-            ? "Thanks for responding. Your personal link is below."
+            ? "Thanks for responding. Your entry pass is where you check in and update your RSVP."
             : "Your changes have been saved."}
         </p>
         {successNote && chosen === "yes" ? (
@@ -387,7 +427,7 @@ export function RsvpForm({
               {ticketTypes.map((t) => (
                 <label
                   key={t.id}
-                  className={`flex min-h-12 items-center justify-between gap-3 rounded-lg border border-line bg-raised px-3 py-2.5 text-sm text-fg has-[:checked]:border-signal has-[:checked]:bg-signal/10 ${
+                  className={`focus-card group flex min-h-12 items-center justify-between gap-3 rounded-lg border border-line bg-raised px-3 py-2.5 text-sm text-fg has-[:checked]:border-signal has-[:checked]:bg-signal/10 ${
                     t.soldOut ? "opacity-50" : "cursor-pointer"
                   }`}
                 >
@@ -398,7 +438,11 @@ export function RsvpForm({
                       value={t.id}
                       required
                       disabled={t.soldOut}
-                      className="h-4 w-4 accent-[var(--signal)]"
+                      className="sr-only"
+                    />
+                    <Icon
+                      name="check"
+                      className="invisible h-4 w-4 shrink-0 text-signal-strong group-has-[:checked]:visible"
                     />
                     {t.name}
                     {t.soldOut ? (
@@ -419,21 +463,21 @@ export function RsvpForm({
         ) : null}
         <a
           href={personalLink}
-          className="mt-4 inline-block w-full rounded-lg bg-signal px-4 py-3 text-base font-medium text-ink"
+          className={buttonClasses({
+            size: "lg",
+            className: "mt-4 min-h-11 w-full",
+          })}
         >
-          {variant === "public" ? "Open my personal page" : "View my RSVP"}
+          {variant === "public" ? "Open my entry pass" : "View my RSVP"}
+          <Icon name="arrowRight" />
         </a>
-        {variant === "public" ? (
-          <p className="mt-3 font-data text-xs text-fg-faint break-all">
-            Save this link to update your RSVP: {personalLink}
-          </p>
-        ) : null}
+        {variant === "public" ? <CopyLinkButton path={personalLink} /> : null}
       </div>
     );
   }
 
   return (
-    <form action={formAction} noValidate className="space-y-5">
+    <form action={formAction} className="space-y-5">
       {state.status === "error" && state.formError ? (
         <p
           role="alert"
@@ -443,7 +487,7 @@ export function RsvpForm({
         </p>
       ) : null}
 
-      <fieldset>
+      <fieldset aria-describedby={errors.choice ? "choice-error" : undefined}>
         <legend className={labelClass}>
           Will you be attending?<span className="text-coral"> *</span>
         </legend>
@@ -451,15 +495,20 @@ export function RsvpForm({
           {CHOICES.map((c) => (
             <label
               key={c.value}
-              className="flex min-h-16 cursor-pointer flex-col items-center justify-center gap-0.5 rounded-lg border border-line bg-ink-2 px-2 py-3 text-center has-[:checked]:border-signal has-[:checked]:bg-signal/15"
+              className="focus-card group relative flex min-h-16 cursor-pointer flex-col items-center justify-center gap-0.5 rounded-lg border border-line bg-ink-2 px-2 py-3 text-center has-[:checked]:border-signal has-[:checked]:bg-signal/15"
             >
               <input
                 type="radio"
                 name="choice"
                 value={c.value}
+                required
                 defaultChecked={defaults.choice === c.value}
                 onChange={() => setChosen(c.value)}
                 className="sr-only"
+              />
+              <Icon
+                name="check"
+                className="invisible absolute right-1.5 top-1.5 h-4 w-4 text-signal-strong group-has-[:checked]:visible"
               />
               <span className="font-medium text-fg">{c.label}</span>
               <span className="text-xs text-fg-faint">{c.hint}</span>

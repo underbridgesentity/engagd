@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, ilike, or } from "drizzle-orm";
 import { db } from "@/db";
 import { attendees, rsvpStatus } from "@/db/schema";
 import { requireOrg, requireOrgEvent } from "@/lib/tenancy";
@@ -7,6 +7,7 @@ import { attendeeCapState } from "@/lib/entitlements";
 import { Card, EmptyState } from "@/components/ui";
 import { APP_URL, CapBanner, RsvpBadge, rsvpLabel } from "../../_shared";
 import { CopyButton } from "../../_components/copy-button";
+import { ConfirmSubmit } from "@/app/(app)/_components/confirm-submit";
 import { AddAttendeeForm } from "./add-attendee-form";
 import { addAttendee, deleteAttendee } from "./actions";
 
@@ -24,26 +25,36 @@ export default async function AttendeesPage({
   searchParams,
 }: {
   params: Promise<{ orgSlug: string; eventId: string }>;
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{ status?: string; q?: string }>;
 }) {
   const { orgSlug, eventId } = await params;
-  const { status } = await searchParams;
+  const { status, q } = await searchParams;
   const ctx = await requireOrg(orgSlug);
   const event = await requireOrgEvent(ctx, eventId);
 
   const filter = STATUSES.includes(status as (typeof STATUSES)[number])
     ? (status as (typeof STATUSES)[number])
     : undefined;
+  const query = q?.trim() ? q.trim() : undefined;
+
+  const conditions = [eq(attendees.eventId, event.id)];
+  if (filter) conditions.push(eq(attendees.rsvpStatus, filter));
+  if (query) {
+    const pattern = `%${query}%`;
+    conditions.push(
+      or(
+        ilike(attendees.firstName, pattern),
+        ilike(attendees.lastName, pattern),
+        ilike(attendees.email, pattern)
+      )!
+    );
+  }
 
   const [rows, cap] = await Promise.all([
     db
       .select()
       .from(attendees)
-      .where(
-        filter
-          ? and(eq(attendees.eventId, event.id), eq(attendees.rsvpStatus, filter))
-          : eq(attendees.eventId, event.id)
-      )
+      .where(and(...conditions))
       .orderBy(desc(attendees.createdAt)),
     attendeeCapState(ctx.organisationId, event.id),
   ]);
@@ -88,39 +99,69 @@ export default async function AttendeesPage({
 
       <AddAttendeeForm action={addAttendee.bind(null, orgSlug, event.id)} />
 
-      <div className="flex flex-wrap gap-1.5">
-        <Link
-          href={base}
-          className={`rounded-full border px-3 py-1 text-xs transition-colors ${
-            !filter
-              ? "border-signal/50 bg-signal/15 text-signal-strong"
-              : "border-line text-fg-dim hover:border-line-strong hover:text-fg"
-          }`}
-        >
-          All
-        </Link>
-        {STATUSES.map((s) => (
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap gap-1.5">
           <Link
-            key={s}
-            href={`${base}?status=${s}`}
+            href={query ? `${base}?q=${encodeURIComponent(query)}` : base}
             className={`rounded-full border px-3 py-1 text-xs transition-colors ${
-              filter === s
+              !filter
                 ? "border-signal/50 bg-signal/15 text-signal-strong"
                 : "border-line text-fg-dim hover:border-line-strong hover:text-fg"
             }`}
           >
-            {rsvpLabel[s]}
+            All
           </Link>
-        ))}
+          {STATUSES.map((s) => (
+            <Link
+              key={s}
+              href={`${base}?status=${s}${query ? `&q=${encodeURIComponent(query)}` : ""}`}
+              className={`rounded-full border px-3 py-1 text-xs transition-colors ${
+                filter === s
+                  ? "border-signal/50 bg-signal/15 text-signal-strong"
+                  : "border-line text-fg-dim hover:border-line-strong hover:text-fg"
+              }`}
+            >
+              {rsvpLabel[s]}
+            </Link>
+          ))}
+        </div>
+        <form action={base} method="get" className="flex items-center gap-2">
+          {filter ? <input type="hidden" name="status" value={filter} /> : null}
+          <label htmlFor="attendee-search" className="sr-only">
+            Search attendees
+          </label>
+          <input
+            id="attendee-search"
+            type="search"
+            name="q"
+            defaultValue={query ?? ""}
+            placeholder="Search name or email"
+            className="w-56 rounded-xl border border-line bg-ink-2 px-3 py-1.5 text-sm text-fg placeholder:text-fg-faint focus:border-signal/70"
+          />
+          <button
+            type="submit"
+            className="rounded-xl border border-line-strong px-3 py-1.5 text-sm font-medium text-fg-dim transition-colors hover:text-fg"
+          >
+            Search
+          </button>
+        </form>
       </div>
 
       {rows.length === 0 ? (
         <EmptyState
-          title={filter ? "Nobody with this status" : "No attendees yet"}
+          title={
+            query
+              ? "No matches"
+              : filter
+                ? "Nobody with this status"
+                : "No attendees yet"
+          }
           hint={
-            filter
-              ? "Try a different filter or clear it to see the full list."
-              : "Add attendees manually, import a CSV, or share the public RSVP link."
+            query
+              ? "No attendee name or email matches that search."
+              : filter
+                ? "Try a different filter or clear it to see the full list."
+                : "Add attendees manually, import a CSV, or share the public RSVP link."
           }
         />
       ) : (
@@ -155,12 +196,12 @@ export default async function AttendeesPage({
                       <div className="flex items-center justify-end gap-2">
                         <CopyButton value={rsvpLink} label="Copy RSVP link" />
                         <form action={deleteAttendee.bind(null, orgSlug, event.id, a.id)}>
-                          <button
-                            type="submit"
+                          <ConfirmSubmit
+                            confirmLabel="Really delete?"
                             className="rounded-lg border border-coral/40 bg-coral/10 px-3 py-1.5 text-xs text-coral transition-colors hover:bg-coral/20"
                           >
                             Delete
-                          </button>
+                          </ConfirmSubmit>
                         </form>
                       </div>
                     </td>

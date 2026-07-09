@@ -28,6 +28,7 @@ export function ImportWizard({
   const [parseError, setParseError] = React.useState("");
   const [submitting, setSubmitting] = React.useState(false);
   const [result, setResult] = React.useState<ImportResult | null>(null);
+  const [dragging, setDragging] = React.useState(false);
 
   const targets: TargetField[] = [
     { key: "firstName", label: "First name", kind: "core" },
@@ -122,6 +123,31 @@ export function ImportWizard({
 
   const preview = rows.slice(0, 5);
 
+  // Honest review: work out client-side which rows the import will skip so
+  // the Review step's reassurance matches what actually happens.
+  const skipPreview = React.useMemo(() => {
+    let unusable = 0;
+    let duplicates = 0;
+    const seenEmails = new Set<string>();
+    for (const r of buildRows()) {
+      const hasName = Boolean(r.firstName || r.lastName);
+      const email = r.email?.toLowerCase();
+      if (!hasName && !email) {
+        unusable++;
+        continue;
+      }
+      if (email) {
+        if (seenEmails.has(email)) {
+          duplicates++;
+          continue;
+        }
+        seenEmails.add(email);
+      }
+    }
+    return { unusable, duplicates, total: unusable + duplicates };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows, mapping, headers]);
+
   return (
     <div className="space-y-5">
       <ol className="flex flex-wrap items-center gap-2">
@@ -153,7 +179,24 @@ export function ImportWizard({
               map columns in the next step, so any layout works.
             </p>
           </div>
-          <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-[10px] border border-dashed border-line-strong px-6 py-12 text-center transition-colors hover:border-signal/60">
+          <label
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragging(true);
+            }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDragging(false);
+              const f = e.dataTransfer.files?.[0];
+              if (f) handleFile(f);
+            }}
+            className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-[10px] border border-dashed px-6 py-12 text-center transition-colors ${
+              dragging
+                ? "border-signal bg-signal/10"
+                : "border-line-strong hover:border-signal/60"
+            }`}
+          >
             <span className="text-sm text-fg">Choose a CSV file</span>
             <span className="text-xs text-fg-faint">or drop it here</span>
             <input
@@ -263,6 +306,28 @@ export function ImportWizard({
             <p className="text-xs text-fg-faint">
               Showing the first {preview.length} of {rows.length} rows.
             </p>
+          ) : null}
+          {skipPreview.total > 0 ? (
+            <div className="rounded-[10px] border border-ember/40 bg-ember/10 px-4 py-3 text-sm">
+              <p className="font-medium text-ember">
+                {skipPreview.total} row{skipPreview.total === 1 ? "" : "s"} will
+                be skipped.
+              </p>
+              <ul className="mt-1 space-y-0.5 text-fg-dim">
+                {skipPreview.unusable > 0 ? (
+                  <li>
+                    {skipPreview.unusable} with no name and no usable email.
+                  </li>
+                ) : null}
+                {skipPreview.duplicates > 0 ? (
+                  <li>
+                    {skipPreview.duplicates} duplicate email
+                    {skipPreview.duplicates === 1 ? "" : "s"} within this file
+                    (the first occurrence is kept).
+                  </li>
+                ) : null}
+              </ul>
+            </div>
           ) : null}
           {result?.error ? <p className="text-sm text-coral">{result.error}</p> : null}
           <div className="flex gap-2">

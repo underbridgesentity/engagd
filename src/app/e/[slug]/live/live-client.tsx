@@ -199,6 +199,10 @@ export function QuestionList({
   questions: PublicQuestionItem[];
 }) {
   const [upvoted, setUpvoted] = useState<string[]>([]);
+  // Optimistic counts keyed by question id: the tally bumps immediately on
+  // tap instead of waiting for the realtime round-trip. Once the server
+  // count catches up, Math.max in the render settles on the real value.
+  const [optimistic, setOptimistic] = useState<Record<string, number>>({});
   const [, startTransition] = useTransition();
 
   useEffect(() => {
@@ -210,10 +214,11 @@ export function QuestionList({
     }
   }, [eventId]);
 
-  const upvote = (questionId: string) => {
+  const upvote = (questionId: string, currentUpvotes: number) => {
     if (upvoted.includes(questionId)) return;
     const next = [...upvoted, questionId];
     setUpvoted(next);
+    setOptimistic((prev) => ({ ...prev, [questionId]: currentUpvotes + 1 }));
     try {
       window.localStorage.setItem(upvoteKey(eventId), JSON.stringify(next));
     } catch {
@@ -236,13 +241,16 @@ export function QuestionList({
     <ul className="space-y-2">
       {questions.map((q) => {
         const mine = upvoted.includes(q.id);
+        const shownUpvotes = mine
+          ? Math.max(q.upvotes, optimistic[q.id] ?? 0)
+          : q.upvotes;
         return (
           <li
             key={q.id}
             className="flex items-start gap-3 rounded-[10px] border border-line bg-raised p-3.5"
           >
             <button
-              onClick={() => upvote(q.id)}
+              onClick={() => upvote(q.id, q.upvotes)}
               disabled={mine}
               aria-label={mine ? "Upvoted" : `Upvote: ${q.text}`}
               className={
@@ -253,7 +261,7 @@ export function QuestionList({
               }
             >
               <span aria-hidden>&#9650;</span>
-              {q.upvotes}
+              {shownUpvotes}
             </button>
             <div className="min-w-0 pt-0.5">
               <p className="text-[15px] leading-snug text-fg">{q.text}</p>

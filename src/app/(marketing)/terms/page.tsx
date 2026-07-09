@@ -8,9 +8,33 @@ import {
 
 export const metadata = { title: "Terms of Service" };
 
+// TOC entries. Each must match a PolicySection heading below exactly so the
+// derived anchor ids line up.
+const SECTIONS = [
+  "Acceptance of these terms",
+  "Description of the service",
+  "Accounts and organisation ownership",
+  "Acceptable use",
+  "Organiser responsibilities",
+  "Subscriptions, plans, and billing",
+  "Payments and ticketing",
+  "Intellectual property",
+  "Third-party services",
+  "Disclaimers and limitation of liability",
+  "Indemnity",
+  "Suspension and termination",
+  "Governing law",
+  "Changes to these terms",
+  "Contact us",
+];
+
 export default function TermsPage() {
   return (
-    <PolicyShell title="Terms of Service" updated="9 July 2026">
+    <PolicyShell
+      title="Terms of Service"
+      updated="9 July 2026"
+      sections={SECTIONS}
+    >
       <PolicyTemplateNote />
 
       <PolicySection heading="Acceptance of these terms">

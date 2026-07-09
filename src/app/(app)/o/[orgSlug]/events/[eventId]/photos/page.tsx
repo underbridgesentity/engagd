@@ -15,6 +15,7 @@ import {
   updateCaption,
 } from "./actions";
 import { PhotoUploader } from "./uploader";
+import { ConfirmSubmit } from "@/app/(app)/_components/confirm-submit";
 
 export default async function PhotosPage({
   params,
@@ -134,9 +135,12 @@ export default async function PhotosPage({
                     </Button>
                   </form>
                   <form action={deleteGallery.bind(null, orgSlug, event.id, gallery.id)}>
-                    <Button type="submit" variant="danger">
+                    <ConfirmSubmit
+                      confirmLabel="Really delete gallery?"
+                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-coral/40 bg-coral/15 px-4 py-2 text-sm font-semibold text-coral transition-colors hover:bg-coral/25"
+                    >
                       Delete gallery
-                    </Button>
+                    </ConfirmSubmit>
                   </form>
                 </div>
               </div>
@@ -222,13 +226,12 @@ export default async function PhotosPage({
                           </Button>
                         </form>
                         <form action={deletePhoto.bind(null, orgSlug, event.id, photo.id)}>
-                          <Button
-                            type="submit"
-                            variant="danger"
-                            className="w-full px-2 py-1 text-xs"
+                          <ConfirmSubmit
+                            confirmLabel="Really?"
+                            className="w-full rounded-xl border border-coral/40 bg-coral/15 px-2 py-1 text-xs font-semibold text-coral transition-colors hover:bg-coral/25"
                           >
                             Delete
-                          </Button>
+                          </ConfirmSubmit>
                         </form>
                       </div>
                     );

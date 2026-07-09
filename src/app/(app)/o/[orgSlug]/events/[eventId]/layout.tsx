@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireOrg, requireOrgEvent } from "@/lib/tenancy";
 import { EventStatusBadge } from "../_shared";
+import { EventTabs } from "./_components/event-tabs";
 
 export default async function EventLayout({
   children,
@@ -14,19 +15,6 @@ export default async function EventLayout({
   const event = await requireOrgEvent(ctx, eventId);
 
   const base = `/o/${orgSlug}/events/${eventId}`;
-  const tabs = [
-    { href: base, label: "Overview" },
-    { href: `${base}/attendees`, label: "Attendees" },
-    { href: `${base}/invites`, label: "Invites" },
-    { href: `${base}/tickets`, label: "Tickets" },
-    { href: `${base}/questions`, label: "Questions" },
-    { href: `${base}/program`, label: "Program" },
-    { href: `${base}/live`, label: "Live" },
-    { href: `${base}/checkin`, label: "Check-in" },
-    { href: `${base}/photos`, label: "Photos" },
-    { href: `${base}/surveys`, label: "Surveys" },
-    { href: `${base}/edit`, label: "Edit" },
-  ];
 
   return (
     <div className="space-y-6">
@@ -39,17 +27,7 @@ export default async function EventLayout({
           <EventStatusBadge status={event.status} />
         </div>
       </div>
-      <nav className="flex gap-1 overflow-x-auto border-b border-line pb-px">
-        {tabs.map((tab) => (
-          <Link
-            key={tab.href}
-            href={tab.href}
-            className="whitespace-nowrap rounded-t-lg px-3 py-2 text-sm text-fg-dim transition-colors hover:bg-raised hover:text-fg"
-          >
-            {tab.label}
-          </Link>
-        ))}
-      </nav>
+      <EventTabs base={base} />
       {children}
     </div>
   );

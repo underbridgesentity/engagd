@@ -7,6 +7,48 @@ import { Logo } from "@/components/logo";
 
 type MicrositeConfig = EventRow["micrositeConfig"];
 
+// Guard rails for organiser-supplied brand colors. Custom accents and
+// backgrounds are only applied when we can parse them and they keep the
+// page legible; anything unparseable falls back to the default theme.
+function parseHex(value: string): [number, number, number] | null {
+  const raw = value.trim().replace(/^#/, "");
+  const hex =
+    raw.length === 3
+      ? raw
+          .split("")
+          .map((c) => c + c)
+          .join("")
+      : raw.length === 6
+        ? raw
+        : null;
+  if (!hex || !/^[0-9a-fA-F]{6}$/.test(hex)) return null;
+  return [
+    Number.parseInt(hex.slice(0, 2), 16),
+    Number.parseInt(hex.slice(2, 4), 16),
+    Number.parseInt(hex.slice(4, 6), 16),
+  ];
+}
+
+function relativeLuminance([r, g, b]: [number, number, number]): number {
+  const linear = (channel: number) => {
+    const s = channel / 255;
+    return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+  };
+  return 0.2126 * linear(r) + 0.7152 * linear(g) + 0.0722 * linear(b);
+}
+
+function contrastRatio(a: number, b: number): number {
+  const [hi, lo] = a >= b ? [a, b] : [b, a];
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+// Luminance of the default --ink (#0c0e13) from globals.css, used as the
+// comparison background when no custom background color is set.
+const DEFAULT_INK_LUMINANCE = relativeLuminance([12, 14, 19]);
+
+// Minimum accent-vs-background contrast before we trust a custom accent.
+const MIN_ACCENT_CONTRAST = 2.5;
+
 export function MicrositeShell({
   config,
   children,
@@ -15,13 +57,39 @@ export function MicrositeShell({
   children: React.ReactNode;
 }) {
   const vars: Record<string, string> = {};
-  if (config.accentColor) {
-    vars["--signal"] = config.accentColor;
-    vars["--signal-strong"] = config.accentColor;
-  }
-  if (config.backgroundColor) {
+
+  const customBg = config.backgroundColor
+    ? parseHex(config.backgroundColor)
+    : null;
+  const bgLuminance = customBg
+    ? relativeLuminance(customBg)
+    : DEFAULT_INK_LUMINANCE;
+
+  if (customBg && config.backgroundColor) {
     vars["--ink"] = config.backgroundColor;
+    if (bgLuminance > 0.5) {
+      // Light custom background: the default near-white text would vanish,
+      // so flip the text stack to dark values.
+      vars["--text"] = "#16130e";
+      vars["--text-dim"] = "#45413a";
+      vars["--text-faint"] = "#615c53";
+    }
   }
+
+  if (config.accentColor) {
+    const accent = parseHex(config.accentColor);
+    // Keep the default accent when the organiser's accent is unparseable or
+    // would be unreadable against the page background.
+    if (
+      accent &&
+      contrastRatio(relativeLuminance(accent), bgLuminance) >=
+        MIN_ACCENT_CONTRAST
+    ) {
+      vars["--signal"] = config.accentColor;
+      vars["--signal-strong"] = config.accentColor;
+    }
+  }
+
   return (
     <div
       style={vars as React.CSSProperties}
@@ -49,6 +117,8 @@ export function EventLogo({ config }: { config: MicrositeConfig }) {
     <img
       src={config.logoUrl}
       alt=""
+      loading="lazy"
+      decoding="async"
       className="mb-4 h-10 w-auto max-w-[160px] object-contain"
     />
   );

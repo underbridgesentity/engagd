@@ -2,6 +2,8 @@
 
 import * as React from "react";
 import { useActionState } from "react";
+import { Icon } from "@/components/icon";
+import { buttonClasses } from "@/components/ui";
 import type { SurveyFormState } from "./actions";
 
 // Shared client form for the anonymous and personalised public survey pages.
@@ -52,6 +54,7 @@ function QuestionField({
             id={name}
             name={name}
             rows={3}
+            required={question.required}
             aria-invalid={error ? true : undefined}
             aria-describedby={error ? errorId : undefined}
             className={inputClass}
@@ -69,6 +72,7 @@ function QuestionField({
           <select
             id={name}
             name={name}
+            required={question.required}
             defaultValue=""
             aria-invalid={error ? true : undefined}
             aria-describedby={error ? errorId : undefined}
@@ -95,13 +99,17 @@ function QuestionField({
             {question.options.map((opt) => (
               <label
                 key={opt}
-                className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border border-line bg-ink-2 px-3 py-2.5 text-sm text-fg has-[:checked]:border-signal/70 has-[:checked]:bg-signal/10"
+                className="focus-card group flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border border-line bg-ink-2 px-3 py-2.5 text-sm text-fg has-[:checked]:border-signal/70 has-[:checked]:bg-signal/10"
               >
                 <input
                   type="checkbox"
                   name={name}
                   value={opt}
-                  className="h-4 w-4 accent-[var(--signal)]"
+                  className="sr-only"
+                />
+                <Icon
+                  name="check"
+                  className="invisible h-4 w-4 shrink-0 text-signal-strong group-has-[:checked]:visible"
                 />
                 {opt}
               </label>
@@ -113,12 +121,17 @@ function QuestionField({
     case "checkbox":
       return (
         <div>
-          <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border border-line bg-ink-2 px-3 py-2.5 text-sm text-fg has-[:checked]:border-signal/70 has-[:checked]:bg-signal/10">
+          <label className="focus-card group flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border border-line bg-ink-2 px-3 py-2.5 text-sm text-fg has-[:checked]:border-signal/70 has-[:checked]:bg-signal/10">
             <input
               type="checkbox"
               name={name}
+              required={question.required}
               aria-describedby={error ? errorId : undefined}
-              className="h-4 w-4 accent-[var(--signal)]"
+              className="sr-only"
+            />
+            <Icon
+              name="check"
+              className="invisible h-4 w-4 shrink-0 text-signal-strong group-has-[:checked]:visible"
             />
             <span>
               {question.label}
@@ -140,6 +153,7 @@ function QuestionField({
             name={name}
             type="number"
             inputMode="numeric"
+            required={question.required}
             aria-invalid={error ? true : undefined}
             aria-describedby={error ? errorId : undefined}
             className={inputClass}
@@ -158,6 +172,7 @@ function QuestionField({
             id={name}
             name={name}
             type="date"
+            required={question.required}
             aria-invalid={error ? true : undefined}
             aria-describedby={error ? errorId : undefined}
             className={inputClass}
@@ -176,6 +191,7 @@ function QuestionField({
             id={name}
             name={name}
             type="text"
+            required={question.required}
             aria-invalid={error ? true : undefined}
             aria-describedby={error ? errorId : undefined}
             className={inputClass}
@@ -190,10 +206,12 @@ export function SurveyForm({
   action,
   questions,
   personalised,
+  eventSlug,
 }: {
   action: (state: SurveyFormState, formData: FormData) => Promise<SurveyFormState>;
   questions: PublicSurveyQuestion[];
   personalised: boolean;
+  eventSlug: string;
 }) {
   const [state, formAction, pending] = useActionState<SurveyFormState, FormData>(action, {
     status: "idle",
@@ -211,12 +229,22 @@ export function SurveyForm({
           Your feedback has been recorded.
           {personalised ? " You can revisit this link to update your answers." : ""}
         </p>
+        <a
+          href={`/e/${eventSlug}`}
+          className={buttonClasses({
+            variant: "secondary",
+            size: "lg",
+            className: "mt-4 min-h-11 w-full",
+          })}
+        >
+          Back to the event
+        </a>
       </div>
     );
   }
 
   return (
-    <form action={formAction} noValidate className="space-y-5">
+    <form action={formAction} className="space-y-5">
       {state.status === "error" && state.formError ? (
         <p
           role="alert"

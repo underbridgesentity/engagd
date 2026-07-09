@@ -2,6 +2,11 @@ import Link from "next/link";
 import { PLANS } from "@/lib/entitlements";
 import type { Entitlements, PlanTier } from "@/lib/entitlements";
 import { Eyebrow } from "@/components/marketing";
+import { Icon } from "@/components/icon";
+import { Reveal } from "@/components/motion";
+import { buttonClasses } from "@/components/ui";
+import { PricingPlans } from "./billing-toggle";
+import type { PlanCardData } from "./billing-toggle";
 
 export const metadata = { title: "Pricing" };
 
@@ -41,25 +46,6 @@ function cta(tier: PlanTier): { href: string; label: string } {
   return { href: "/login", label: `Choose ${PLANS[tier].name}` };
 }
 
-function CheckIcon() {
-  return (
-    <svg
-      aria-hidden
-      viewBox="0 0 20 20"
-      fill="none"
-      className="mt-0.5 h-5 w-5 shrink-0 text-signal"
-    >
-      <path
-        d="M4 10.5l3.5 3.5L16 6"
-        stroke="currentColor"
-        strokeWidth="2.25"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
 function priceBlock(tier: PlanTier, billing: Billing) {
   const plan = PLANS[tier];
   if (plan.monthlyPriceCents === null || plan.annualPriceCents === null) {
@@ -80,7 +66,7 @@ function priceBlock(tier: PlanTier, billing: Billing) {
 
 const COMPARISON: {
   label: string;
-  value: (ent: Entitlements) => string;
+  value: (ent: Entitlements) => string | boolean;
 }[] = [
   { label: "Active events", value: (e) => limit(e.maxActiveEvents) },
   { label: "Attendees per event", value: (e) => limit(e.maxAttendeesPerEvent) },
@@ -89,14 +75,21 @@ const COMPARISON: {
     label: "Analytics",
     value: (e) => (e.analytics === "full" ? "Full" : "Basic"),
   },
-  { label: "Custom branding", value: (e) => (e.customBranding ? "Yes" : "No") },
-  {
-    label: "Verified reply-to",
-    value: (e) => (e.replyToVerification ? "Yes" : "No"),
-  },
-  { label: "Paid ticketing", value: (e) => (e.paidTicketing ? "Yes" : "No") },
-  { label: "Custom domain", value: (e) => (e.customDomain ? "Yes" : "No") },
+  { label: "Custom branding", value: (e) => e.customBranding },
+  { label: "Verified reply-to", value: (e) => e.replyToVerification },
+  { label: "Paid ticketing", value: (e) => e.paidTicketing },
+  { label: "Custom domain", value: (e) => e.customDomain },
 ];
+
+// Booleans become a check or a muted dash; strings render as-is.
+function comparisonCell(value: string | boolean) {
+  if (typeof value !== "boolean") return value;
+  return value ? (
+    <Icon name="check" strokeWidth={2.5} className="text-base text-signal" />
+  ) : (
+    <span className="text-fg-faint">-</span>
+  );
+}
 
 const FAQS = [
   {
@@ -121,209 +114,151 @@ const FAQS = [
   },
 ];
 
-export default async function PricingPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ billing?: string }>;
-}) {
-  const { billing: billingParam } = await searchParams;
-  const billing: Billing = billingParam === "annual" ? "annual" : "monthly";
+export default function PricingPage() {
+  // Both billing variants are computed here on the server; the client toggle
+  // only flips which one is visible.
+  const plans: PlanCardData[] = TIERS.map((tier) => ({
+    tier,
+    name: PLANS[tier].name,
+    featured: tier === "professional",
+    prices: {
+      monthly: priceBlock(tier, "monthly"),
+      annual: priceBlock(tier, "annual"),
+    },
+    cta: cta(tier),
+    features: planFeatures(PLANS[tier].entitlements),
+  }));
 
   return (
     <>
       {/* Hero */}
-      <section className="mx-auto max-w-6xl px-6 pt-24 pb-12 sm:pt-28">
-        <Eyebrow>Pricing</Eyebrow>
-        <h1 className="display-tight mt-6 max-w-4xl text-5xl text-fg sm:text-6xl lg:text-7xl">
-          Priced for the guest list, not the{" "}
-          <span className="text-signal">finance meeting.</span>
-        </h1>
-        <p className="mt-7 max-w-xl text-lg text-fg-dim sm:text-xl">
-          Start free and pay only when the room gets bigger. Every plan is the
-          full suite, from first invite to final thank you. No modules to unlock,
-          no surprises.
-        </p>
-
-        {/* Billing toggle */}
-        <div className="mt-10 flex items-center gap-4">
-          <div className="inline-flex rounded-full border border-line-strong bg-raised p-1">
-            <Link
-              href="/pricing"
-              scroll={false}
-              aria-pressed={billing === "monthly"}
-              className={`rounded-full px-5 py-2 text-sm font-semibold transition-colors ${
-                billing === "monthly"
-                  ? "bg-signal text-ink"
-                  : "text-fg-dim hover:text-fg"
-              }`}
-            >
-              Monthly
-            </Link>
-            <Link
-              href="/pricing?billing=annual"
-              scroll={false}
-              aria-pressed={billing === "annual"}
-              className={`rounded-full px-5 py-2 text-sm font-semibold transition-colors ${
-                billing === "annual"
-                  ? "bg-signal text-ink"
-                  : "text-fg-dim hover:text-fg"
-              }`}
-            >
-              Annual
-            </Link>
-          </div>
-          <span className="font-data text-xs uppercase tracking-widest text-mint">
-            2 months free
-          </span>
+      <section className="relative">
+        <div
+          aria-hidden
+          className="glow-top absolute inset-x-0 top-0 -z-10 h-[520px]"
+        />
+        <div className="mx-auto max-w-6xl px-6 pt-24 pb-12 sm:pt-28">
+          <Reveal>
+            <Eyebrow>Pricing</Eyebrow>
+            <h1 className="display-tight mt-6 max-w-4xl text-5xl text-fg sm:text-6xl lg:text-7xl">
+              Priced for the guest list, not the{" "}
+              <span className="text-signal">finance meeting.</span>
+            </h1>
+            <p className="mt-7 max-w-xl text-lg text-fg-dim sm:text-xl">
+              Start free and pay only when the room gets bigger. Every plan is
+              the full suite, from first invite to final thank you. No modules
+              to unlock, no surprises.
+            </p>
+          </Reveal>
         </div>
       </section>
 
-      {/* Plan cards */}
+      {/* Billing toggle and plan cards */}
       <section className="mx-auto max-w-6xl px-6 pb-8">
-        <div className="grid gap-4 lg:grid-cols-4">
-          {TIERS.map((tier) => {
-            const plan = PLANS[tier];
-            const featured = tier === "professional";
-            const price = priceBlock(tier, billing);
-            const action = cta(tier);
-            return (
-              <div
-                key={tier}
-                className={`relative flex flex-col rounded-3xl border p-7 ${
-                  featured
-                    ? "border-signal bg-signal/10"
-                    : "border-line bg-raised"
-                }`}
-              >
-                {featured && (
-                  <span className="absolute -top-3 left-7 rounded-full bg-signal px-3 py-1 font-data text-xs font-bold uppercase tracking-widest text-ink">
-                    Most popular
-                  </span>
-                )}
-                <p className="text-sm font-bold uppercase tracking-widest text-fg-dim">
-                  {plan.name}
-                </p>
-                <p className="mt-5 text-4xl font-extrabold tracking-tight text-fg">
-                  {price.headline}
-                </p>
-                <p className="mt-2 min-h-[2.5rem] text-sm text-fg-faint">
-                  {price.note}
-                </p>
-                <Link
-                  href={action.href}
-                  className={`mt-6 rounded-full px-5 py-3 text-center text-sm font-bold transition-transform hover:-translate-y-0.5 ${
-                    featured
-                      ? "bg-signal text-ink hover:bg-signal-strong"
-                      : "border border-line-strong text-fg hover:border-signal/60"
-                  }`}
-                >
-                  {action.label}
-                </Link>
-                <ul className="mt-7 space-y-3">
-                  {planFeatures(plan.entitlements).map((f) => (
-                    <li
-                      key={f}
-                      className="flex items-start gap-2.5 text-sm text-fg-dim"
-                    >
-                      <CheckIcon />
-                      <span>{f}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            );
-          })}
-        </div>
+        <Reveal delay={80}>
+          <PricingPlans plans={plans} />
+        </Reveal>
       </section>
 
       {/* Comparison table */}
       <section className="mx-auto max-w-6xl px-6 py-20">
-        <Eyebrow>Compare</Eyebrow>
-        <h2 className="mt-5 max-w-2xl text-balance text-4xl text-fg sm:text-5xl">
-          Every number, side by side.
-        </h2>
-        <div className="mt-10 overflow-x-auto rounded-3xl border border-line">
-          <table className="w-full min-w-[640px] border-collapse text-left">
-            <thead>
-              <tr className="border-b border-line">
-                <th className="p-5 font-data text-xs uppercase tracking-widest text-fg-faint">
-                  Feature
-                </th>
-                {TIERS.map((tier) => (
-                  <th
-                    key={tier}
-                    className={`p-5 text-sm font-bold ${
-                      tier === "professional" ? "text-signal" : "text-fg"
-                    }`}
-                  >
-                    {PLANS[tier].name}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {COMPARISON.map((row) => (
-                <tr
-                  key={row.label}
-                  className="border-b border-line last:border-0"
-                >
-                  <th className="p-5 text-sm font-medium text-fg-dim">
-                    {row.label}
+        <Reveal>
+          <Eyebrow>Compare</Eyebrow>
+          <h2 className="mt-5 max-w-2xl text-balance text-4xl text-fg sm:text-5xl">
+            Every number, side by side.
+          </h2>
+          <div className="mt-10 overflow-x-auto rounded-3xl border border-line">
+            <table className="w-full min-w-[640px] border-collapse text-left">
+              <thead>
+                <tr className="border-b border-line">
+                  <th className="p-5 font-data text-xs uppercase tracking-widest text-fg-faint">
+                    Feature
                   </th>
                   {TIERS.map((tier) => (
-                    <td
+                    <th
                       key={tier}
-                      className={`p-5 text-sm ${
-                        tier === "professional"
-                          ? "bg-signal/5 font-semibold text-fg"
-                          : "text-fg-dim"
+                      className={`p-5 text-sm font-bold ${
+                        tier === "professional" ? "text-signal" : "text-fg"
                       }`}
                     >
-                      {row.value(PLANS[tier].entitlements)}
-                    </td>
+                      {PLANS[tier].name}
+                    </th>
                   ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {COMPARISON.map((row) => (
+                  <tr
+                    key={row.label}
+                    className="border-b border-line last:border-0"
+                  >
+                    <th className="p-5 text-sm font-medium text-fg-dim">
+                      {row.label}
+                    </th>
+                    {TIERS.map((tier) => (
+                      <td
+                        key={tier}
+                        className={`p-5 text-sm ${
+                          tier === "professional"
+                            ? "bg-signal/5 font-semibold text-fg"
+                            : "text-fg-dim"
+                        }`}
+                      >
+                        {comparisonCell(row.value(PLANS[tier].entitlements))}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Reveal>
       </section>
 
       {/* FAQ */}
       <section className="border-y border-line bg-ink-2">
         <div className="mx-auto max-w-6xl px-6 py-24">
-          <Eyebrow>Questions</Eyebrow>
-          <h2 className="mt-5 max-w-2xl text-balance text-4xl text-fg sm:text-5xl">
-            The things people ask before signing up.
-          </h2>
-          <dl className="mt-12 grid gap-x-12 gap-y-10 md:grid-cols-2">
-            {FAQS.map((item) => (
-              <div key={item.q}>
-                <dt className="text-lg font-bold text-fg">{item.q}</dt>
-                <dd className="mt-3 text-base leading-relaxed text-fg-dim">
-                  {item.a}
-                </dd>
-              </div>
-            ))}
-          </dl>
+          <Reveal>
+            <Eyebrow>Questions</Eyebrow>
+            <h2 className="mt-5 max-w-2xl text-balance text-4xl text-fg sm:text-5xl">
+              The things people ask before signing up.
+            </h2>
+            <dl className="mt-12 grid gap-x-12 gap-y-10 md:grid-cols-2">
+              {FAQS.map((item) => (
+                <div key={item.q}>
+                  <dt className="text-lg font-bold text-fg">{item.q}</dt>
+                  <dd className="mt-3 text-base leading-relaxed text-fg-dim">
+                    {item.a}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </Reveal>
         </div>
       </section>
 
       {/* Closing CTA */}
       <section className="mx-auto max-w-4xl px-6 py-28 text-center">
-        <h2 className="display-tight text-balance text-4xl text-fg sm:text-6xl">
-          Try it on your next event, free.
-        </h2>
-        <p className="mx-auto mt-6 max-w-xl text-lg text-fg-dim">
-          Set up your first event in minutes and only pay when the guest list
-          grows. No card needed to start.
-        </p>
-        <Link
-          href="/login"
-          className="mt-9 inline-block rounded-full bg-signal px-8 py-4 text-base font-bold text-ink transition-transform hover:-translate-y-0.5 hover:bg-signal-strong"
-        >
-          Get started free
-        </Link>
+        <Reveal>
+          <h2 className="display-tight text-balance text-4xl text-fg sm:text-6xl">
+            Try it on your next event, free.
+          </h2>
+          <p className="mx-auto mt-6 max-w-xl text-lg text-fg-dim">
+            Set up your first event in minutes and only pay when the guest list
+            grows. No card needed to start.
+          </p>
+          <Link
+            href="/login"
+            className={buttonClasses({
+              size: "lg",
+              pill: true,
+              className: "mt-9",
+            })}
+          >
+            Get started free
+            <Icon name="arrowRight" />
+          </Link>
+        </Reveal>
       </section>
     </>
   );

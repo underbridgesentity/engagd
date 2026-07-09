@@ -9,9 +9,32 @@ import {
 
 export const metadata = { title: "Privacy Policy" };
 
+// TOC entries. Each must match a PolicySection heading below exactly so the
+// derived anchor ids line up.
+const SECTIONS = [
+  "Who we are",
+  "What data we collect",
+  "Lawful basis and POPIA alignment",
+  "How we use data",
+  "Sharing and sub-processors",
+  "Where your data is stored",
+  "Retention",
+  "Security",
+  "Your rights under POPIA",
+  "Attendees",
+  "Cookies",
+  "Children",
+  "Changes to this policy",
+  "Contact us",
+];
+
 export default function PrivacyPage() {
   return (
-    <PolicyShell title="Privacy Policy" updated="9 July 2026">
+    <PolicyShell
+      title="Privacy Policy"
+      updated="9 July 2026"
+      sections={SECTIONS}
+    >
       <PolicyTemplateNote />
 
       <PolicySection heading="Who we are">

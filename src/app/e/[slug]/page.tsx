@@ -134,6 +134,8 @@ export default async function EventMicrositePage({
       <img
         src={event.coverImageUrl ?? "/img/microsite-fallback.jpg"}
         alt=""
+        loading="lazy"
+        decoding="async"
         className="mt-4 aspect-[2/1] w-full rounded-[10px] border border-line object-cover"
       />
 

@@ -11,6 +11,7 @@ import { requireOrg, requireOrgEvent } from "@/lib/tenancy";
 import { getEntitlements } from "@/lib/entitlements";
 import { Badge, Button, Card, EmptyState, Input, Label } from "@/components/ui";
 import { createTicketType, deleteTicketType, updateTicketType } from "./actions";
+import { ConfirmSubmit } from "@/app/(app)/_components/confirm-submit";
 
 const ERROR_COPY: Record<string, string> = {
   "invalid-type": "Check the ticket type fields and try again.",
@@ -181,6 +182,11 @@ export default async function EventTicketsPage({
                     </span>
                   </div>
                   {canEdit ? (
+                    <details className="group mt-2">
+                      <summary className="inline-flex cursor-pointer list-none items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-fg-dim transition-colors hover:bg-raised-2 hover:text-fg [&::-webkit-details-marker]:hidden">
+                        <span className="group-open:hidden">Edit</span>
+                        <span className="hidden group-open:inline">Close</span>
+                      </summary>
                     <div className="mt-3 flex flex-wrap items-end gap-3">
                       <form
                         action={updateTicketType.bind(null, orgSlug, eventId)}
@@ -229,11 +235,15 @@ export default async function EventTicketsPage({
                       </form>
                       <form action={deleteTicketType.bind(null, orgSlug, eventId)}>
                         <input type="hidden" name="id" value={t.id} />
-                        <Button type="submit" variant="danger">
+                        <ConfirmSubmit
+                          confirmLabel="Really delete?"
+                          className="inline-flex items-center justify-center rounded-xl border border-coral/40 bg-coral/15 px-4 py-2 text-sm font-semibold text-coral transition-colors hover:bg-coral/25"
+                        >
                           Delete
-                        </Button>
+                        </ConfirmSubmit>
                       </form>
                     </div>
+                    </details>
                   ) : null}
                 </div>
               );

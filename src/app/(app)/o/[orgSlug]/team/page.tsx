@@ -12,6 +12,7 @@ import {
   resendInvite,
   revokeInvite,
 } from "./actions";
+import { ConfirmSubmit } from "@/app/(app)/_components/confirm-submit";
 
 const ERROR_COPY: Record<string, string> = {
   "invalid-invite": "Enter a valid email address and pick a role.",
@@ -170,9 +171,12 @@ export default async function TeamPage({
                   </form>
                   <form action={removeMember.bind(null, orgSlug)}>
                     <input type="hidden" name="membershipId" value={m.membershipId} />
-                    <Button type="submit" variant="danger" className="px-3 py-1.5">
+                    <ConfirmSubmit
+                      confirmLabel="Really remove?"
+                      className="rounded-xl border border-coral/40 bg-coral/15 px-3 py-1.5 text-sm font-semibold text-coral transition-colors hover:bg-coral/25"
+                    >
                       Remove
-                    </Button>
+                    </ConfirmSubmit>
                   </form>
                 </>
               ) : (

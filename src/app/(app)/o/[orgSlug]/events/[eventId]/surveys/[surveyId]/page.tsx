@@ -16,6 +16,7 @@ import {
   updateSurveyQuestion,
 } from "../actions";
 import { SurveyQuestionsEditor } from "./survey-questions-editor";
+import { ConfirmSubmit } from "@/app/(app)/_components/confirm-submit";
 
 const STATUS_TONE = { draft: "neutral", open: "mint", closed: "ember" } as const;
 
@@ -123,9 +124,12 @@ export default async function SurveyDetailPage({
             </form>
           )}
           <form action={deleteSurvey.bind(null, orgSlug, event.id, survey.id)}>
-            <Button type="submit" variant="danger">
+            <ConfirmSubmit
+              confirmLabel="Delete survey and responses?"
+              className="inline-flex items-center justify-center rounded-xl border border-coral/40 bg-coral/15 px-4 py-2 text-sm font-semibold text-coral transition-colors hover:bg-coral/25"
+            >
               Delete
-            </Button>
+            </ConfirmSubmit>
           </form>
         </div>
       </div>
