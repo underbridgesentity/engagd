@@ -78,7 +78,9 @@ export default async function OrgLayout({
           </button>
         </form>
       </aside>
-      <main className="min-w-0 flex-1 px-5 py-8 md:px-10">{children}</main>
+      <main id="main-content" className="min-w-0 flex-1 px-5 py-8 md:px-10">
+        {children}
+      </main>
     </div>
   );
 }

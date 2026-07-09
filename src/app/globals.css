@@ -11,7 +11,8 @@
   --line-strong: #333c4e;
   --text: #eef1f6;
   --text-dim: #9aa5b8;
-  --text-faint: #667085;
+  /* Lifted from #667085 so small secondary copy clears AA on the dark base. */
+  --text-faint: #828da1;
   /* Blue is the primary accent. */
   --signal: #5b8cff;
   --signal-strong: #7da3ff;
@@ -35,10 +36,20 @@
   --color-ember: var(--ember);
   --color-mint: var(--mint);
   --color-coral: var(--coral);
-  /* Fraunces display, Hanken Grotesk body, mono only for in-app data. */
+  /* Archivo display, Hanken Grotesk body, mono only for in-app data. */
   --font-display: var(--font-display);
   --font-body: var(--font-body);
   --font-data: var(--font-data);
+
+  /* Dark-tuned elevation scale. Default Tailwind shadows vanish on dark, so
+     these lean on deep blacks plus a hairline top highlight for legible depth. */
+  --shadow-e1: 0 1px 2px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  --shadow-e2: 0 6px 20px -6px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --shadow-e3: 0 20px 50px -16px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --shadow-glow: 0 10px 40px -10px color-mix(in srgb, var(--signal) 45%, transparent);
+
+  /* Signature easing, shared by every considered transition. */
+  --ease-soft: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 html {
@@ -75,10 +86,59 @@ h4 {
   text-wrap: balance;
 }
 
+/* A near-white ring reads clearly on the dark base, on blue surfaces, and on
+   photographs, where a blue ring would disappear. */
 :focus-visible {
-  outline: 2px solid var(--signal);
+  outline: 2px solid var(--text);
   outline-offset: 2px;
   border-radius: 4px;
+}
+
+/* For controls whose real input is visually hidden (choice cards, toggles):
+   put this on the visible element so it shows the ring when the input has
+   focus. */
+.focus-card:has(:focus-visible) {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+/* Skip link, revealed on keyboard focus. */
+.skip-link {
+  position: fixed;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 100;
+  transform: translateY(-160%);
+  transition: transform 0.2s var(--ease-soft);
+  border-radius: 0.75rem;
+  background: var(--signal);
+  color: var(--ink);
+  padding: 0.6rem 1rem;
+  font-weight: 700;
+  font-size: 0.875rem;
+}
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+/* Fine grain over the whole canvas so large dark fields are not dead flat. */
+.grain-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  opacity: 0.04;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Soft brand glow, for hero and section accents. */
+.glow-top {
+  background: radial-gradient(
+    60% 55% at 50% 0%,
+    color-mix(in srgb, var(--signal) 14%, transparent),
+    transparent 70%
+  );
 }
 
 ::selection {

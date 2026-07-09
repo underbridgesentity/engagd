@@ -11,7 +11,9 @@ export default function MarketingLayout({
       <SiteHeader />
       {/* Clearance for the fixed header. Full-bleed hero sections pull back
           up with a negative top margin so the photograph reaches the top. */}
-      <main className="pt-20 md:pt-24">{children}</main>
+      <main id="main-content" className="pt-20 md:pt-24">
+        {children}
+      </main>
       <MarketingFooter />
     </div>
   );

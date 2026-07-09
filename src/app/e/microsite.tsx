@@ -28,7 +28,9 @@ export function MicrositeShell({
       className="min-h-dvh bg-ink text-fg"
     >
       <div className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col px-4 pb-10 sm:px-6">
-        <main className="flex-1">{children}</main>
+        <main id="main-content" className="flex-1">
+          {children}
+        </main>
         {config.hideEngagdBranding ? null : (
           <footer className="mt-12 flex items-center justify-center gap-1.5 border-t border-line pt-4">
             <span className="font-data text-xs text-fg-faint">Powered by</span>

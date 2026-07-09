@@ -45,7 +45,11 @@ export default function RootLayout({
       <body
         className={`${display.variable} ${body.variable} ${data.variable} antialiased`}
       >
+        <a href="#main-content" className="skip-link">
+          Skip to content
+        </a>
         {children}
+        <div className="grain-overlay" aria-hidden />
       </body>
     </html>
   );
