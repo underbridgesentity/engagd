@@ -4,13 +4,15 @@ import { events, memberships, organisations, subscriptionPayments } from "@/db/s
 import { PLANS } from "@/lib/entitlements";
 import type { PlanTier } from "@/lib/entitlements";
 import { audit } from "@/lib/audit";
-
-const PAYSTACK_API = "https://api.paystack.co";
+import { YocoAdapter } from "@/lib/payments/yoco";
+import { PaystackAdapter } from "@/lib/payments/paystack";
+import type { PaymentAdapter } from "@/lib/payments/types";
 
 export type BillingIntervalValue = "monthly" | "annual";
+type PlatformProvider = "yoco" | "paystack";
 
-// Thrown when Engagd's platform Paystack key is missing. The billing UI
-// turns this into "Payments are not configured yet".
+// Thrown when no platform payment key is configured. The billing UI turns
+// this into "Payments are not configured yet".
 export class PaymentsNotConfiguredError extends Error {
   constructor() {
     super("Payments are not configured yet");
@@ -18,17 +20,33 @@ export class PaymentsNotConfiguredError extends Error {
   }
 }
 
-// Platform billing uses Engagd's own Paystack key from the environment.
-// This is deliberately separate from organiser bring-your-own-keys ticket
-// payments (adapterForEvent); never mix the two.
-function platformSecretKey(): string {
+// Platform billing uses Engagd's own payment account, configured by
+// environment keys. This is deliberately separate from organiser
+// bring-your-own-keys ticket payments (adapterForEvent); never mix the two.
+// Yoco is preferred when both are configured: subscription money settles
+// straight to the bank account linked to the Yoco account.
+function platformProvider(): PlatformProvider {
+  if (process.env.PLATFORM_YOCO_SECRET_KEY) return "yoco";
+  if (process.env.PLATFORM_PAYSTACK_SECRET_KEY) return "paystack";
+  throw new PaymentsNotConfiguredError();
+}
+
+function platformAdapter(provider: PlatformProvider): PaymentAdapter {
+  if (provider === "yoco") {
+    const key = process.env.PLATFORM_YOCO_SECRET_KEY;
+    if (!key) throw new PaymentsNotConfiguredError();
+    return new YocoAdapter({ secretKey: key });
+  }
   const key = process.env.PLATFORM_PAYSTACK_SECRET_KEY;
   if (!key) throw new PaymentsNotConfiguredError();
-  return key;
+  return new PaystackAdapter({ secretKey: key });
 }
 
 export function paymentsConfigured(): boolean {
-  return Boolean(process.env.PLATFORM_PAYSTACK_SECRET_KEY);
+  return Boolean(
+    process.env.PLATFORM_YOCO_SECRET_KEY ||
+      process.env.PLATFORM_PAYSTACK_SECRET_KEY
+  );
 }
 
 function priceFor(tier: PlanTier, interval: BillingIntervalValue): number {
@@ -49,9 +67,10 @@ export interface CheckoutStart {
   authorizationUrl: string;
 }
 
-// Creates a subscription payment record and a Paystack checkout for it.
-// Returns the URL to redirect the org owner to. Payment truth is never
-// taken from the redirect: verifySubscriptionPayment does the real check.
+// Creates a subscription payment record and a hosted checkout for it with
+// the platform provider. Returns the URL to redirect the org owner to.
+// Payment truth is never taken from the redirect: verifySubscriptionPayment
+// does the real check against the provider API.
 export async function startSubscriptionCheckout(
   orgId: string,
   tier: PlanTier,
@@ -59,7 +78,8 @@ export async function startSubscriptionCheckout(
   ownerEmail: string,
   baseUrl: string
 ): Promise<CheckoutStart> {
-  const secretKey = platformSecretKey();
+  const provider = platformProvider();
+  const adapter = platformAdapter(provider);
   const amountCents = priceFor(tier, interval);
 
   const [org] = await db
@@ -74,7 +94,7 @@ export async function startSubscriptionCheckout(
       organisationId: orgId,
       planTier: tier,
       billingInterval: interval,
-      provider: "paystack",
+      provider,
       amountCents,
       currency: "ZAR",
       status: "created",
@@ -82,49 +102,44 @@ export async function startSubscriptionCheckout(
     .returning({ id: subscriptionPayments.id });
 
   const callbackUrl = `${baseUrl}/o/${org.slug}/billing/result/${payment.id}`;
-  const res = await fetch(`${PAYSTACK_API}/transaction/initialize`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${secretKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      email: ownerEmail,
-      amount: amountCents,
+
+  try {
+    const checkout = await adapter.createCheckout({
+      amountCents,
       currency: "ZAR",
-      callback_url: callbackUrl,
+      paymentId: payment.id,
+      successUrl: callbackUrl,
+      cancelUrl: callbackUrl,
+      failureUrl: callbackUrl,
       metadata: {
+        email: ownerEmail,
         subscriptionPaymentId: payment.id,
         organisationId: orgId,
         planTier: tier,
         billingInterval: interval,
       },
-    }),
-  });
-  if (!res.ok) {
+    });
+
+    await db
+      .update(subscriptionPayments)
+      .set({
+        providerReference: checkout.providerReference,
+        status: "pending",
+        updatedAt: new Date(),
+      })
+      .where(eq(subscriptionPayments.id, payment.id));
+
+    return {
+      subscriptionPaymentId: payment.id,
+      authorizationUrl: checkout.redirectUrl,
+    };
+  } catch (err) {
     await db
       .update(subscriptionPayments)
       .set({ status: "failed", updatedAt: new Date() })
       .where(eq(subscriptionPayments.id, payment.id));
-    throw new Error(`Paystack initialize failed (${res.status})`);
+    throw err;
   }
-  const body = (await res.json()) as {
-    data: { reference: string; authorization_url: string };
-  };
-
-  await db
-    .update(subscriptionPayments)
-    .set({
-      providerReference: body.data.reference,
-      status: "pending",
-      updatedAt: new Date(),
-    })
-    .where(eq(subscriptionPayments.id, payment.id));
-
-  return {
-    subscriptionPaymentId: payment.id,
-    authorizationUrl: body.data.authorization_url,
-  };
 }
 
 export type VerifyOutcome =
@@ -151,10 +166,26 @@ function periodEnd(from: Date, interval: BillingIntervalValue): Date {
   return end;
 }
 
-// Verifies a subscription payment against Paystack (the only source of
-// truth) and, on success, applies the plan change to the organisation.
-// Idempotent: an already-succeeded payment short-circuits without any
-// provider call or re-application.
+// Provider-reported states that mean the checkout is dead and will never
+// complete, as opposed to still-pending.
+function isTerminalFailure(raw: unknown): boolean {
+  const record = raw as {
+    status?: string;
+    data?: { status?: string };
+  } | null;
+  const status = record?.data?.status ?? record?.status;
+  return (
+    status === "failed" ||
+    status === "abandoned" ||
+    status === "expired" ||
+    status === "cancelled"
+  );
+}
+
+// Verifies a subscription payment against the provider it was created with
+// (the only source of truth) and, on success, applies the plan change to
+// the organisation. Idempotent: an already-succeeded payment short-circuits
+// without any provider call or re-application.
 export async function verifySubscriptionPayment(
   subscriptionPaymentId: string
 ): Promise<VerifyOutcome> {
@@ -175,38 +206,37 @@ export async function verifySubscriptionPayment(
   if (payment.status === "failed") return { status: "failed" };
   if (!payment.providerReference) return { status: "pending" };
 
-  const secretKey = platformSecretKey();
-  const res = await fetch(
-    `${PAYSTACK_API}/transaction/verify/${encodeURIComponent(payment.providerReference)}`,
-    { headers: { Authorization: `Bearer ${secretKey}` } }
-  );
-  if (!res.ok) return { status: "pending" };
-  const body = (await res.json()) as {
-    data?: { status?: string; amount?: number };
-  };
-
-  const providerStatus = body.data?.status;
-  if (providerStatus === "failed" || providerStatus === "abandoned") {
-    await db
-      .update(subscriptionPayments)
-      .set({
-        status: "failed",
-        verificationResult: body,
-        verifiedAt: new Date(),
-        updatedAt: new Date(),
-      })
-      .where(eq(subscriptionPayments.id, payment.id));
-    return { status: "failed" };
+  const adapter = platformAdapter(payment.provider);
+  let result: Awaited<ReturnType<PaymentAdapter["verifyPayment"]>>;
+  try {
+    result = await adapter.verifyPayment(payment.providerReference);
+  } catch {
+    return { status: "pending" };
   }
-  if (providerStatus !== "success") return { status: "pending" };
+
+  if (!result.paid) {
+    if (isTerminalFailure(result.raw)) {
+      await db
+        .update(subscriptionPayments)
+        .set({
+          status: "failed",
+          verificationResult: result.raw,
+          verifiedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(subscriptionPayments.id, payment.id));
+      return { status: "failed" };
+    }
+    return { status: "pending" };
+  }
 
   // Amount must match exactly; a mismatch is treated as failed, never applied.
-  if (body.data?.amount !== payment.amountCents) {
+  if (result.amountCents !== payment.amountCents) {
     await db
       .update(subscriptionPayments)
       .set({
         status: "failed",
-        verificationResult: body,
+        verificationResult: result.raw,
         verifiedAt: new Date(),
         updatedAt: new Date(),
       })
@@ -216,7 +246,7 @@ export async function verifySubscriptionPayment(
       action: "billing.payment_amount_mismatch",
       entityType: "subscription_payment",
       entityId: payment.id,
-      detail: { expected: payment.amountCents, got: body.data?.amount ?? null },
+      detail: { expected: payment.amountCents, got: result.amountCents },
     });
     return { status: "failed" };
   }
@@ -228,7 +258,7 @@ export async function verifySubscriptionPayment(
     .update(subscriptionPayments)
     .set({
       status: "succeeded",
-      verificationResult: body,
+      verificationResult: result.raw,
       verifiedAt: now,
       periodEndsAt: endsAt,
       updatedAt: now,
@@ -264,7 +294,7 @@ export async function verifySubscriptionPayment(
       subscriptionPaymentId: payment.id,
       amountCents: payment.amountCents,
       periodEndsAt: endsAt.toISOString(),
-      via: "paystack_verified",
+      via: `${payment.provider}_verified`,
     },
   });
 

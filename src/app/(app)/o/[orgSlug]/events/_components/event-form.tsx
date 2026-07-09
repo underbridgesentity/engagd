@@ -169,7 +169,7 @@ export function EventForm({
               id="venueAddress"
               name="venueAddress"
               defaultValue={defaults.venueAddress}
-              placeholder="12 Long Street, Cape Town"
+              placeholder="135 Rivonia Road, Sandton"
             />
           </div>
         </div>

@@ -195,7 +195,7 @@ export default async function BillingPage({
       </div>
       <p className="mt-2 font-data text-xs text-fg-faint">
         Annual billing: pay for 10 months, get 12. Paid plan changes go through
-        a secure Paystack checkout and apply as soon as payment is confirmed.
+        a secure checkout and apply as soon as payment is confirmed.
       </p>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

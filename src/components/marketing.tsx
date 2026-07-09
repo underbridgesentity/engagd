@@ -61,7 +61,7 @@ export function MarketingFooter() {
         </div>
         <div className="mt-14 flex flex-col items-start justify-between gap-4 border-t border-line pt-8 text-sm text-fg-faint sm:flex-row sm:items-center">
           <p>© {new Date().getFullYear()} Engagd. Made for events people remember.</p>
-          <p className="font-data text-xs">Cape Town, South Africa</p>
+          <p className="font-data text-xs">Johannesburg, South Africa</p>
         </div>
       </div>
     </footer>

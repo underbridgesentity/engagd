@@ -21,7 +21,7 @@ const schema = z.object({
   interval: z.enum(["monthly", "annual"]),
 });
 
-// Real payment collection: paid tiers go through a Paystack checkout with
+// Real payment collection: paid tiers go through a hosted checkout with
 // Engagd's platform key; only the server-side verify applies the change.
 // Free downgrades apply immediately. Enterprise is sales-led.
 export async function changePlan(orgSlug: string, formData: FormData) {
@@ -79,7 +79,7 @@ export async function changePlan(orgSlug: string, formData: FormData) {
     redirect(`/o/${orgSlug}/billing?ok=plan-changed`);
   }
 
-  // Paid tier: start a checkout and send the owner to Paystack.
+  // Paid tier: start a checkout and send the owner to the payment provider.
   const [owner] = await db
     .select({ email: users.email })
     .from(users)

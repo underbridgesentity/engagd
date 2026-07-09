@@ -24,7 +24,7 @@ function rands(cents: number): string {
   return `R${(cents / 100).toLocaleString("en-ZA", { maximumFractionDigits: 0 })}`;
 }
 
-// Payment result page. The Paystack redirect lands here, but nothing on
+// Payment result page. The provider redirect lands here, but nothing on
 // this page trusts redirect params: we always verify server-side against
 // the provider before showing success.
 export default async function BillingResultPage({

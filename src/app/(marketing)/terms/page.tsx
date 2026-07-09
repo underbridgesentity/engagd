@@ -40,7 +40,7 @@ export default function TermsPage() {
       <PolicySection heading="Acceptance of these terms">
         <PolicyParagraph>
           These Terms of Service govern your access to and use of the Engagd
-          platform, operated from Cape Town, South Africa. By creating an
+          platform, operated from Johannesburg, South Africa. By creating an
           account, or by accessing or using the service, you agree to be bound
           by these terms. If you are using Engagd on behalf of an organisation,
           you confirm that you have authority to bind that organisation to these
