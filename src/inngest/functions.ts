@@ -294,4 +294,7 @@ export const sendSingleInvitation = inngest.createFunction(
   }
 );
 
-export const functions = [sendCampaign, sendSingleInvitation];
+export { billingRenewals } from "./billing-renewals";
+import { billingRenewals } from "./billing-renewals";
+
+export const functions = [sendCampaign, sendSingleInvitation, billingRenewals];

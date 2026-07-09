@@ -1,4 +1,4 @@
-import { and, count, eq } from "drizzle-orm";
+import { and, count, desc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { events, memberships, organisations, subscriptionPayments } from "@/db/schema";
 import { PLANS } from "@/lib/entitlements";
@@ -303,6 +303,47 @@ export async function verifySubscriptionPayment(
     planTier: payment.planTier,
     billingInterval: payment.billingInterval,
     periodEndsAt: endsAt,
+  };
+}
+
+export interface RenewalState {
+  periodEndsAt: Date | null;
+  // True when paying for the current plan again makes sense: the plan has
+  // lapsed (past_due) or the paid-through date is within the renewal window.
+  renewable: boolean;
+}
+
+const RENEWAL_WINDOW_DAYS = 30;
+
+// Where the org stands against its paid-through date, used to let the
+// billing page offer "Renew" for the current plan instead of bouncing a
+// same-plan checkout as "unchanged".
+export async function getRenewalState(orgId: string): Promise<RenewalState> {
+  const [org] = await db
+    .select({ billingStatus: organisations.billingStatus })
+    .from(organisations)
+    .where(eq(organisations.id, orgId));
+  const [payment] = await db
+    .select({ periodEndsAt: subscriptionPayments.periodEndsAt })
+    .from(subscriptionPayments)
+    .where(
+      and(
+        eq(subscriptionPayments.organisationId, orgId),
+        eq(subscriptionPayments.status, "succeeded")
+      )
+    )
+    .orderBy(desc(subscriptionPayments.periodEndsAt))
+    .limit(1);
+
+  const periodEndsAt = payment?.periodEndsAt ?? null;
+  if (org?.billingStatus === "past_due") {
+    return { periodEndsAt, renewable: true };
+  }
+  if (!periodEndsAt) return { periodEndsAt: null, renewable: false };
+  const windowMs = RENEWAL_WINDOW_DAYS * 24 * 60 * 60 * 1000;
+  return {
+    periodEndsAt,
+    renewable: periodEndsAt.getTime() - Date.now() <= windowMs,
   };
 }
 

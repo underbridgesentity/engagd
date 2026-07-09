@@ -10,6 +10,7 @@ import { requireOrg } from "@/lib/tenancy";
 import { audit } from "@/lib/audit";
 import {
   checkDowngrade,
+  getRenewalState,
   isDowngrade,
   PaymentsNotConfiguredError,
   startSubscriptionCheckout,
@@ -44,7 +45,12 @@ export async function changePlan(orgSlug: string, formData: FormData) {
     interval: ctx.organisation.billingInterval,
   };
   if (from.tier === tier && from.interval === interval) {
-    redirect(`/o/${orgSlug}/billing?ok=unchanged`);
+    // Same plan is normally a no-op, but near or past the paid-through date
+    // it is a renewal: let it proceed to checkout.
+    const renewal = await getRenewalState(ctx.organisationId);
+    if (!renewal.renewable || tier === "free") {
+      redirect(`/o/${orgSlug}/billing?ok=unchanged`);
+    }
   }
 
   // Guard downgrades: current usage must fit inside the target tier.

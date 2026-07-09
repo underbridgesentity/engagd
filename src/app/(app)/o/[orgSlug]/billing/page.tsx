@@ -142,6 +142,21 @@ export default async function BillingPage({
           You are already on that plan and interval.
         </p>
       ) : null}
+      {ctx.organisation.billingStatus === "past_due" ? (
+        <div
+          role="alert"
+          className="mt-4 rounded-lg border border-ember/40 bg-ember/10 px-3 py-2 text-sm"
+        >
+          <p className="font-medium text-ember">
+            Your plan has lapsed and is in its grace period.
+          </p>
+          <p className="mt-1 text-fg-dim">
+            Renew below to keep {currentPlan.name}. If you do nothing, the
+            account moves to the Free plan when the grace period ends. Live
+            invite links keep working either way.
+          </p>
+        </div>
+      ) : null}
 
       <Card className="mt-6">
         <div className="flex flex-wrap items-center justify-between gap-3">

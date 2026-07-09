@@ -228,6 +228,14 @@ export const subscriptionPayments = pgTable(
     verifiedAt: timestamp("verified_at", { withTimezone: true }),
     // Paid-through date this payment extends the subscription to.
     periodEndsAt: timestamp("period_ends_at", { withTimezone: true }),
+    // Renewal housekeeping, tracked per billing period so the daily job
+    // sends each notice exactly once.
+    renewalReminderSentAt: timestamp("renewal_reminder_sent_at", {
+      withTimezone: true,
+    }),
+    lapseNoticeSentAt: timestamp("lapse_notice_sent_at", {
+      withTimezone: true,
+    }),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
