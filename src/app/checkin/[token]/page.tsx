@@ -60,11 +60,14 @@ export default async function StaffCheckinPage({
 }
 
 // Deliberately bare: staff get the scanner and nothing else. No app nav, no
-// links out to any other data.
+// links out to any other data. Stays dark: it is used at doors in dim venues
+// and a bright white screen would blind the person scanning.
 function Shell({ children }: { children: React.ReactNode }) {
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center px-4 py-8">
-      {children}
-    </main>
+    <div className="theme-dark min-h-dvh w-full">
+      <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center px-4 py-8">
+        {children}
+      </main>
+    </div>
   );
 }

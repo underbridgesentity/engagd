@@ -1,14 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="14" fill="#0c0e13" />
+  <rect width="64" height="64" rx="14" fill="#ffffff" />
+  <rect width="63" height="63" x="0.5" y="0.5" rx="13.5" fill="none" stroke="#e7e5dd" />
   <text
     x="30"
     y="45"
-    font-family="'Bricolage Grotesque', 'Schibsted Grotesk', sans-serif"
+    font-family="'Inter', sans-serif"
     font-size="40"
-    font-weight="700"
+    font-weight="800"
     font-style="italic"
-    fill="#e8ecf4"
+    fill="#17181c"
     text-anchor="middle"
   >e</text>
-  <circle cx="49" cy="42" r="4.5" fill="#5b8cff" />
+  <circle cx="49" cy="42" r="4.5" fill="#3b5bfd" />
 </svg>

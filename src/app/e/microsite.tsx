@@ -42,9 +42,10 @@ function contrastRatio(a: number, b: number): number {
   return (hi + 0.05) / (lo + 0.05);
 }
 
-// Luminance of the default --ink (#0c0e13) from globals.css, used as the
-// comparison background when no custom background color is set.
-const DEFAULT_INK_LUMINANCE = relativeLuminance([12, 14, 19]);
+// Luminance of the default --ink (#fafaf7, the light paper) from
+// globals.css, used as the comparison background when no custom background
+// color is set.
+const DEFAULT_INK_LUMINANCE = relativeLuminance([250, 250, 247]);
 
 // Minimum accent-vs-background contrast before we trust a custom accent.
 const MIN_ACCENT_CONTRAST = 2.5;
@@ -67,13 +68,18 @@ export function MicrositeShell({
 
   if (customBg && config.backgroundColor) {
     vars["--ink"] = config.backgroundColor;
-    if (bgLuminance > 0.5) {
-      // Light custom background: the default near-white text would vanish,
-      // so flip the text stack to dark values.
-      vars["--text"] = "#16130e";
-      vars["--text-dim"] = "#45413a";
-      vars["--text-faint"] = "#615c53";
+    if (bgLuminance <= 0.5) {
+      // Dark custom background: the default dark text would vanish, so flip
+      // the text stack (and surfaces) to light-on-dark values.
+      vars["--text"] = "#eef1f6";
+      vars["--text-dim"] = "#9aa5b8";
+      vars["--text-faint"] = "#828da1";
+      vars["--raised"] = "#ffffff12";
+      vars["--raised-2"] = "#ffffff1c";
+      vars["--line"] = "#ffffff24";
+      vars["--line-strong"] = "#ffffff3a";
     }
+    // Light custom backgrounds keep the default dark text stack.
   }
 
   if (config.accentColor) {

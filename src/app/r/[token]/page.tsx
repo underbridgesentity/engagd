@@ -109,7 +109,7 @@ export default async function PersonalRsvpPage({
           <img
             src={qrDataUrl}
             alt="Your check-in QR code"
-            className="mx-auto mt-4 w-full max-w-[240px] rounded-lg bg-white p-2"
+            className="mx-auto mt-4 w-full max-w-[240px] rounded-lg border border-line bg-white p-2"
           />
           <p className="mt-3 font-data text-xs text-fg-faint">
             Save this page link to come back to your RSVP any time.

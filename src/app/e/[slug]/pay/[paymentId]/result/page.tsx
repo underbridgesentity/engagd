@@ -134,7 +134,7 @@ export default async function PaymentResultPage({
               emailed to you.
             </p>
             {ticketQr ? (
-              <div className="mx-auto mt-5 w-fit rounded-xl bg-white p-3">
+              <div className="mx-auto mt-5 w-fit rounded-xl border border-line bg-white p-3">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={ticketQr} alt="Your ticket QR code" width={240} height={240} />
               </div>

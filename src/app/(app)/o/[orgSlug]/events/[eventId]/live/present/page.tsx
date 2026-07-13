@@ -32,7 +32,7 @@ export default async function PresenterPage({
   const base = `/o/${orgSlug}/events/${eventId}/live/present`;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-ink text-fg">
+    <div className="theme-dark fixed inset-0 z-50 flex flex-col bg-ink text-fg">
       <LiveRefresh eventId={event.id} />
 
       <header className="flex items-center justify-between px-10 pt-8">

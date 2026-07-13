@@ -1,24 +1,26 @@
 @import "tailwindcss";
 
 :root {
-  /* Cool neutral charcoal, kept a touch lighter than a pure blue-black so it
-     reads modern rather than gloomy. Blue accent pairs with the warm photos. */
-  --ink: #0c0e13;
-  --ink-2: #11141c;
-  --raised: #161a24;
-  --raised-2: #1f2431;
-  --line: #262d3b;
-  --line-strong: #333c4e;
-  --text: #eef1f6;
-  --text-dim: #9aa5b8;
-  /* Lifted from #667085 so small secondary copy clears AA on the dark base. */
-  --text-faint: #828da1;
-  /* Blue is the primary accent. */
-  --signal: #5b8cff;
-  --signal-strong: #7da3ff;
-  --ember: #ffb454;
-  --mint: #3ed598;
-  --coral: #ff5c5c;
+  /* Warm light canvas: off-white paper, white cards, soft warm-grey lines.
+     Token names keep their roles (ink = page background, raised = surface)
+     so the whole app flips with the values. */
+  --ink: #fafaf7;
+  --ink-2: #f3f3ee;
+  --raised: #ffffff;
+  --raised-2: #f0efe9;
+  --line: #e7e5dd;
+  --line-strong: #d6d3c8;
+  --text: #17181c;
+  --text-dim: #5b5e69;
+  --text-faint: #83868f;
+  /* Vivid blue accent, dark enough for white button text on light ground. */
+  --signal: #3b5bfd;
+  --signal-strong: #2e49e0;
+  --ember: #d97b06;
+  --mint: #0e9f6e;
+  --coral: #e5484d;
+  /* Always-dark layer for text-over-photo scrims, independent of theme. */
+  --scrim: #101116;
 }
 
 @theme inline {
@@ -36,58 +38,59 @@
   --color-ember: var(--ember);
   --color-mint: var(--mint);
   --color-coral: var(--coral);
-  /* Archivo display, Hanken Grotesk body, mono only for in-app data. */
-  --font-display: var(--font-display);
-  --font-body: var(--font-body);
+  --color-scrim: var(--scrim);
+  /* Inter everywhere; mono only for small data labels. */
+  --font-display: var(--font-inter);
+  --font-body: var(--font-inter);
   --font-data: var(--font-data);
 
-  /* Dark-tuned elevation scale. Default Tailwind shadows vanish on dark, so
-     these lean on deep blacks plus a hairline top highlight for legible depth. */
-  --shadow-e1: 0 1px 2px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.03);
-  --shadow-e2: 0 6px 20px -6px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.04);
-  --shadow-e3: 0 20px 50px -16px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  --shadow-glow: 0 10px 40px -10px color-mix(in srgb, var(--signal) 45%, transparent);
+  /* Soft light-theme elevation: shadows are tinted, never grey fog. */
+  --shadow-e1: 0 1px 2px rgba(23, 24, 28, 0.05), 0 1px 1px rgba(23, 24, 28, 0.03);
+  --shadow-e2: 0 10px 28px -10px rgba(23, 24, 28, 0.14), 0 2px 6px rgba(23, 24, 28, 0.05);
+  --shadow-e3: 0 28px 60px -20px rgba(23, 24, 28, 0.22), 0 4px 12px rgba(23, 24, 28, 0.06);
+  --shadow-glow: 0 12px 36px -10px color-mix(in srgb, var(--signal) 35%, transparent);
 
   /* Signature easing, shared by every considered transition. */
   --ease-soft: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 html {
-  color-scheme: dark;
+  color-scheme: light;
   scroll-behavior: smooth;
 }
 
 body {
   background: var(--ink);
   color: var(--text);
-  font-family: var(--font-body), sans-serif;
+  font-family: var(--font-inter), sans-serif;
   -webkit-font-smoothing: antialiased;
+  font-feature-settings: "cv05" 1, "ss01" 1;
 }
 
-/* Headings use Archivo, heavy and tightly set for a bold, professional voice. */
+/* Headings: Inter set tight and confident, weight over size. */
 h1,
 h2,
 h3,
 h4 {
-  font-family: var(--font-display), sans-serif;
+  font-family: var(--font-inter), sans-serif;
   font-weight: 700;
-  letter-spacing: -0.03em;
-  line-height: 1.05;
+  letter-spacing: -0.025em;
+  line-height: 1.08;
 }
 
 .display-tight {
-  font-family: var(--font-display), sans-serif;
+  font-family: var(--font-inter), sans-serif;
   font-weight: 800;
-  letter-spacing: -0.04em;
-  line-height: 1;
+  letter-spacing: -0.035em;
+  line-height: 1.02;
 }
 
 .text-balance {
   text-wrap: balance;
 }
 
-/* A near-white ring reads clearly on the dark base, on blue surfaces, and on
-   photographs, where a blue ring would disappear. */
+/* A near-black ring reads clearly on the light base, on blue surfaces, and
+   on photographs. */
 :focus-visible {
   outline: 2px solid var(--text);
   outline-offset: 2px;
@@ -112,7 +115,7 @@ h4 {
   transition: transform 0.2s var(--ease-soft);
   border-radius: 0.75rem;
   background: var(--signal);
-  color: var(--ink);
+  color: #ffffff;
   padding: 0.6rem 1rem;
   font-weight: 700;
   font-size: 0.875rem;
@@ -121,14 +124,37 @@ h4 {
   transform: translateY(0);
 }
 
-/* Fine grain over the whole canvas so large dark fields are not dead flat. */
+/* Scoped dark theme for surfaces that live in dark venues: the projector
+   presenter view and the door check-in scanner. Reassigns the same tokens,
+   so components inside need no changes. */
+.theme-dark {
+  --ink: #0c0e13;
+  --ink-2: #11141c;
+  --raised: #161a24;
+  --raised-2: #1f2431;
+  --line: #262d3b;
+  --line-strong: #333c4e;
+  --text: #eef1f6;
+  --text-dim: #9aa5b8;
+  --text-faint: #828da1;
+  --signal: #5b8cff;
+  --signal-strong: #7da3ff;
+  --ember: #ffb454;
+  --mint: #3ed598;
+  --coral: #ff5c5c;
+  color-scheme: dark;
+  background: var(--ink);
+  color: var(--text);
+}
+
+/* Whisper of paper grain so large light fields are not sterile. */
 .grain-overlay {
   position: fixed;
   inset: 0;
   z-index: 40;
   pointer-events: none;
-  opacity: 0.04;
-  mix-blend-mode: overlay;
+  opacity: 0.025;
+  mix-blend-mode: multiply;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
@@ -136,13 +162,13 @@ h4 {
 .glow-top {
   background: radial-gradient(
     60% 55% at 50% 0%,
-    color-mix(in srgb, var(--signal) 14%, transparent),
+    color-mix(in srgb, var(--signal) 9%, transparent),
     transparent 70%
   );
 }
 
 ::selection {
-  background: color-mix(in srgb, var(--signal) 40%, transparent);
+  background: color-mix(in srgb, var(--signal) 25%, transparent);
 }
 
 /* Scroll-reveal: elements start lowered and faded, then settle when the

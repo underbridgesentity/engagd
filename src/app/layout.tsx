@@ -1,18 +1,13 @@
 import type { Metadata } from "next";
-import { Archivo, Hanken_Grotesk, Spline_Sans_Mono } from "next/font/google";
+import { Inter, Spline_Sans_Mono } from "next/font/google";
 import "./globals.css";
 
-// Archivo is the display voice: a confident, slightly technical grotesque
-// that reads bold and professional rather than playful. Hanken Grotesk is the
-// clean body companion. Deliberately not Inter, deliberately not a soft serif.
-const display = Archivo({
+// Inter carries display and body, set tight and confident on a warm light
+// canvas. The character comes from weight, spacing, and layout rather than
+// a novelty face.
+const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-display",
-  weight: ["500", "600", "700", "800"],
-});
-const body = Hanken_Grotesk({
-  subsets: ["latin"],
-  variable: "--font-body",
+  variable: "--font-inter",
   weight: ["400", "500", "600", "700", "800"],
 });
 const data = Spline_Sans_Mono({
@@ -43,7 +38,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${display.variable} ${body.variable} ${data.variable} antialiased`}
+        className={`${inter.variable} ${data.variable} antialiased`}
       >
         <a href="#main-content" className="skip-link">
           Skip to content
