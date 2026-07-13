@@ -68,12 +68,10 @@ export function MarketingFooter() {
   );
 }
 
-// Shared section eyebrow: a small accent label with a leading rule, set in
-// the body face rather than a monospace to avoid the generic tech look.
+// Shared section eyebrow: a plain small-caps accent label, no decoration.
 export function Eyebrow({ children }: { children: React.ReactNode }) {
   return (
-    <p className="flex items-center gap-3 text-xs font-bold uppercase tracking-[0.2em] text-signal">
-      <span className="h-px w-8 bg-signal/60" />
+    <p className="text-xs font-bold uppercase tracking-[0.2em] text-signal">
       {children}
     </p>
   );

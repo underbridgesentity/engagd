@@ -185,9 +185,10 @@ export default function HowItWorksPage() {
       {/* Closing CTA over a photograph. */}
       <section className="relative isolate overflow-hidden">
         <Image
-          src="/img/hero.jpg"
+          src="/img/contact.jpg"
           alt=""
           fill
+          quality={85}
           sizes="100vw"
           className="-z-10 object-cover"
         />

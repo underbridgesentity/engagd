@@ -173,8 +173,9 @@ export default function HomePage() {
                 alt="An engaged audience at a conference"
                 fill
                 priority
+                quality={90}
                 sizes="(max-width: 1024px) 100vw, 560px"
-                className="object-cover object-[60%_25%]"
+                className="object-cover"
               />
               <div
                 aria-hidden
@@ -275,6 +276,7 @@ export default function HomePage() {
                     src={p.img}
                     alt=""
                     fill
+                    quality={85}
                     sizes="(max-width: 1024px) 100vw, 384px"
                     className="-z-10 object-cover transition-transform duration-700 group-hover:scale-105"
                   />
@@ -451,6 +453,7 @@ export default function HomePage() {
           src="/img/event-cover-default.jpg"
           alt=""
           fill
+          quality={85}
           sizes="100vw"
           className="-z-10 object-cover"
         />
