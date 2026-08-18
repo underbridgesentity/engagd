@@ -95,19 +95,64 @@ const VALUE = [
   },
 ];
 
-const CAPABILITIES = [
-  "CSV import with column mapping",
-  "Branded event microsites",
+const FEATURES: Array<{
+  icon: Parameters<typeof Icon>[0]["name"];
+  tint: string;
+  iconTint: string;
+  title: string;
+  body: string;
+}> = [
+  {
+    icon: "plus",
+    tint: "bg-signal/8",
+    iconTint: "bg-signal/15 text-signal",
+    title: "CSV import that just works",
+    body: "Bring any guest list. Map your columns once and every row lands clean.",
+  },
+  {
+    icon: "spark",
+    tint: "bg-ember/8",
+    iconTint: "bg-ember/15 text-ember",
+    title: "Branded microsites",
+    body: "Your colours, your logo, one clean link that carries the whole event.",
+  },
+  {
+    icon: "check",
+    tint: "bg-mint/8",
+    iconTint: "bg-mint/15 text-mint",
+    title: "QR check-in",
+    body: "A phone camera at the door and a live headcount on your dashboard.",
+  },
+  {
+    icon: "alert",
+    tint: "bg-signal/8",
+    iconTint: "bg-signal/15 text-signal",
+    title: "Live polls and Q&A",
+    body: "The room votes and asks from their seats. Results land on the big screen.",
+  },
+  {
+    icon: "copy",
+    tint: "bg-mint/8",
+    iconTint: "bg-mint/15 text-mint",
+    title: "Tickets, free or paid",
+    body: "Sell through your own payment account. The money never routes through us.",
+  },
+  {
+    icon: "search",
+    tint: "bg-ember/8",
+    iconTint: "bg-ember/15 text-ember",
+    title: "Analytics your boss gets",
+    body: "Open rates, RSVP conversion, check-in rate. Exportable in one click.",
+  },
+];
+
+const MORE_CAPABILITIES = [
   "Custom RSVP questions",
-  "QR and short-code check-in",
-  "Live polls on the big screen",
-  "Moderated audience Q&A",
-  "Free and paid ticketing",
   "Post-event surveys",
   "Photo galleries",
-  "Attendance analytics",
   "Scheduled reminders",
   "Your own sending domain",
+  "Moderated Q&A",
 ];
 
 const FAQ = [
@@ -182,8 +227,33 @@ export default function HomePage() {
                 className="absolute inset-0 bg-gradient-to-t from-ink/70 via-transparent to-transparent"
               />
             </div>
-            {/* Floating proof chip for a designed, product-forward feel. */}
-            <div className="absolute -bottom-5 -left-4 hidden rounded-2xl border border-line-strong bg-raised/95 px-5 py-4 shadow-[var(--shadow-e2)] backdrop-blur sm:block">
+            {/* Floating product fragments, real UI vignettes, not screenshots. */}
+            <div className="float-a absolute -left-10 top-10 hidden w-56 rounded-2xl border border-line bg-raised p-4 shadow-[var(--shadow-e2)] sm:block">
+              <div className="flex items-center gap-2.5">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-mint/15 text-mint">
+                  <Icon name="check" />
+                </span>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-fg">
+                    Naledi is going
+                  </p>
+                  <p className="text-xs text-fg-faint">RSVP received just now</p>
+                </div>
+              </div>
+            </div>
+            <div className="float-b absolute -right-6 top-1/3 hidden w-44 rounded-2xl border border-line bg-raised p-4 shadow-[var(--shadow-e2)] lg:block">
+              <p className="text-xs font-medium uppercase tracking-wide text-fg-faint">
+                Checked in
+              </p>
+              <p className="mt-1 font-display text-3xl font-extrabold text-fg">
+                184
+              </p>
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-raised-2">
+                <div className="h-full w-3/4 rounded-full bg-signal" />
+              </div>
+              <p className="mt-1.5 text-xs text-fg-faint">of 240 expected</p>
+            </div>
+            <div className="absolute -bottom-5 -left-4 hidden rounded-2xl border border-line bg-raised/95 px-5 py-4 shadow-[var(--shadow-e2)] backdrop-blur sm:block">
               <p className="font-display text-2xl font-bold text-fg">RSVP to recap</p>
               <p className="mt-0.5 text-sm text-fg-dim">one link, start to finish</p>
             </div>
@@ -218,31 +288,50 @@ export default function HomePage() {
         </Reveal>
         <div className="mt-12 grid gap-6 lg:grid-cols-5">
           <Reveal className="lg:col-span-3">
-            <figure className="overflow-hidden rounded-2xl border border-line-strong bg-raised shadow-[var(--shadow-e2)]">
-              <Image
-                src="/img/product-dashboard.png"
-                alt="The Engagd organiser dashboard showing an event overview"
-                width={1600}
-                height={1000}
-                sizes="(max-width: 1024px) 100vw, 720px"
-                className="w-full"
-              />
-              <figcaption className="border-t border-line px-5 py-3 text-sm text-fg-dim">
+            <figure>
+              <div className="overflow-hidden rounded-2xl border border-line-strong bg-raised shadow-[var(--shadow-e3)]">
+                <div className="flex items-center gap-2 border-b border-line bg-ink-2 px-4 py-2.5">
+                  <span className="flex gap-1.5">
+                    <span className="h-2.5 w-2.5 rounded-full bg-coral/60" />
+                    <span className="h-2.5 w-2.5 rounded-full bg-ember/60" />
+                    <span className="h-2.5 w-2.5 rounded-full bg-mint/60" />
+                  </span>
+                  <span className="mx-auto rounded-md bg-raised px-8 py-0.5 font-data text-[11px] text-fg-faint">
+                    engagd.co.za/o/your-events
+                  </span>
+                </div>
+                <Image
+                  src="/img/product-dashboard.png"
+                  alt="The Engagd organiser dashboard showing an event overview"
+                  width={1600}
+                  height={1000}
+                  sizes="(max-width: 1024px) 100vw, 720px"
+                  className="w-full"
+                />
+              </div>
+              <figcaption className="mt-3 px-1 text-sm text-fg-dim">
                 Organiser dashboard: RSVPs, check-in, and analytics at a glance.
               </figcaption>
             </figure>
           </Reveal>
           <Reveal className="lg:col-span-2" delay={100}>
-            <figure className="overflow-hidden rounded-2xl border border-line-strong bg-raised shadow-[var(--shadow-e2)]">
-              <Image
-                src="/img/product-microsite.png"
-                alt="An Engagd attendee microsite on a phone"
-                width={900}
-                height={1400}
-                sizes="(max-width: 1024px) 100vw, 460px"
-                className="w-full"
-              />
-              <figcaption className="border-t border-line px-5 py-3 text-sm text-fg-dim">
+            <figure>
+              <div className="overflow-hidden rounded-2xl border border-line-strong bg-raised shadow-[var(--shadow-e3)]">
+                <div className="flex items-center gap-2 border-b border-line bg-ink-2 px-4 py-2.5">
+                  <span className="mx-auto rounded-md bg-raised px-6 py-0.5 font-data text-[11px] text-fg-faint">
+                    engagd.co.za/e/your-event
+                  </span>
+                </div>
+                <Image
+                  src="/img/product-microsite.png"
+                  alt="An Engagd attendee microsite on a phone"
+                  width={900}
+                  height={1400}
+                  sizes="(max-width: 1024px) 100vw, 460px"
+                  className="w-full"
+                />
+              </div>
+              <figcaption className="mt-3 px-1 text-sm text-fg-dim">
                 Attendee microsite: RSVP in seconds, no account.
               </figcaption>
             </figure>
@@ -319,14 +408,33 @@ export default function HomePage() {
               The whole suite, or just the part you came for.
             </h2>
           </Reveal>
+          <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {FEATURES.map((f, i) => (
+              <Reveal key={f.title} delay={(i % 3) * 80}>
+                <div
+                  className={`h-full rounded-2xl border border-line ${f.tint} p-6 transition-transform duration-300 hover:-translate-y-1`}
+                >
+                  <span
+                    className={`flex h-10 w-10 items-center justify-center rounded-xl ${f.iconTint}`}
+                  >
+                    <Icon name={f.icon} className="text-lg" />
+                  </span>
+                  <h3 className="mt-4 text-lg font-bold text-fg">{f.title}</h3>
+                  <p className="mt-1.5 text-sm leading-relaxed text-fg-dim">
+                    {f.body}
+                  </p>
+                </div>
+              </Reveal>
+            ))}
+          </div>
           <Reveal>
-            <ul className="mt-12 grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
-              {CAPABILITIES.map((c) => (
+            <ul className="mt-8 flex flex-wrap gap-2">
+              {MORE_CAPABILITIES.map((c) => (
                 <li
                   key={c}
-                  className="flex items-center gap-3 border-b border-line py-3 text-lg font-medium text-fg"
+                  className="flex items-center gap-1.5 rounded-full border border-line bg-raised px-3.5 py-1.5 text-sm font-medium text-fg-dim"
                 >
-                  <Icon name="check" className="shrink-0 text-signal" />
+                  <Icon name="check" className="text-signal" />
                   {c}
                 </li>
               ))}

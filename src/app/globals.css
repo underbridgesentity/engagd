@@ -171,6 +171,33 @@ h4 {
   background: color-mix(in srgb, var(--signal) 25%, transparent);
 }
 
+/* Gentle idle float for hero fragment cards. Two phases so neighbouring
+   cards drift out of sync. Disabled under reduced motion. */
+@keyframes float-a {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+@keyframes float-b {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+}
+.float-a {
+  animation: float-a 7s ease-in-out infinite;
+}
+.float-b {
+  animation: float-b 9s ease-in-out 1.2s infinite;
+}
+
 /* Scroll-reveal: elements start lowered and faded, then settle when the
    observer marks them visible. No-JS and reduced-motion fall back to shown. */
 .reveal {
