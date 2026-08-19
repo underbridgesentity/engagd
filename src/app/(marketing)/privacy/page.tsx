@@ -139,7 +139,7 @@ export default function PrivacyPage() {
           items={[
             "Resend, for sending transactional and event email.",
             "Yoco and Paystack, as payment providers where organisers enable ticketing.",
-            "Amazon Web Services (AWS), for hosting and storage in South Africa.",
+            "Supabase (on AWS infrastructure), for database hosting in the European Union.",
             "Realtime messaging and background job providers that power live features and scheduled sends.",
           ]}
         />
@@ -153,9 +153,9 @@ export default function PrivacyPage() {
 
       <PolicySection heading="Where your data is stored">
         <PolicyParagraph>
-          Our primary infrastructure is hosted with AWS in South Africa
-          so your data stays in the country by
-          default. Some sub-processors, such as email delivery, may process
+          Our database is hosted with Supabase on AWS infrastructure in the
+          European Union (Ireland), and our application runs on Vercel. We
+          plan to offer South African data residency as we grow. Some sub-processors, such as email delivery, may process
           limited data outside South Africa in order to provide their service.
           Where that happens, we take steps to ensure a comparable level of
           protection as required by POPIA.
